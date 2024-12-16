@@ -265,6 +265,8 @@ void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHei
 	const PolyNormal& polyNormal = poly.getPolyNormal(); // Use PolyNormal abstraction
 	const Vector4& normalStart = polyNormal.start;
 	const Vector4& normalEnd = polyNormal.end;
+	const Vector4 unitNormal = (normalEnd - normalStart).normalize() * 13.0;
+	const Vector4 newEnd = normalStart + unitNormal;
 
 	LineDrawer::DrawLine(
 		pDC->m_hDC,
@@ -284,6 +286,7 @@ void CCGWorkView::DrawVertexNormals(CDC* pDC, const Poly& poly, double screenHei
 		const Vector4& normalEnd = vertexNormal.end;
 		const Vector4 unitNormal = (normalEnd - normalStart).normalize()*13.0;
 		const Vector4 newEnd = normalStart + unitNormal;
+
 		LineDrawer::DrawLine(
 			pDC->m_hDC,
 			Vector4(static_cast<double>(normalStart.x), static_cast<double>(screenHeight - normalStart.y), 0.0),

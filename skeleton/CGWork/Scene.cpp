@@ -51,11 +51,9 @@ void Scene::applyTransform(const Matrix4& transform) {
         if (poly.hasVertexNormalsDefined()) {
             for (VertexNormal& vertexNormal : poly.getVertexNormals()) {
                 vertexNormal.start = sceneTransform.transform(vertexNormal.start);
-
+                Vector4 tempEnd = sceneTransform.transform(vertexNormal.end);
                 // Transform only the direction vector (end - start)
-                Vector4 direction = vertexNormal.end - vertexNormal.start;
-                direction = normalTransform.transform(direction).normalize();
-
+                Vector4 direction = (tempEnd - vertexNormal.start).normalize();
                 vertexNormal.end = vertexNormal.start + direction; // Update the end point
             }
         }
