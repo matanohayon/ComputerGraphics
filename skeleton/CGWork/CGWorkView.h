@@ -10,6 +10,8 @@
 #endif // _MSC_VER > 1000
 
 #include "Poly.h"
+#include "Scene.h"
+
 #include "gl\gl.h"    // Include the standard CGWork  headers
 #include "gl\glu.h"   // Add the utility library
 
@@ -32,7 +34,8 @@ public:
 private:
 	bool m_draw_poly_normals; //flag to choose whether to draw poly normals
 	bool m_draw_vertex_normals;//flag to choose whether to draw vertex normals
-
+	bool m_draw_bounding_box;
+	bool m_uniform_color;
 	int m_nAxis;				// Axis of Action, X Y or Z
 	int m_nAction;				// Rotate, Translate, Scale
 	int m_nView;				// Orthographic, perspective
@@ -90,7 +93,7 @@ private:
 	void DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
 	void DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
 	void DrawVertexNormals(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
-
+	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CCGWorkView)

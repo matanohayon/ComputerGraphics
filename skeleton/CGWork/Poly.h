@@ -6,57 +6,65 @@
 #include "Matrix4.h"
 #include <Windows.h> // For COLORREF
 
+// Represents the polygon normal with a start and end point
+class PolyNormal {
+public:
+    Vector4 start;
+    Vector4 end;
+
+    PolyNormal() : start(Vector4()), end(Vector4()) {}
+    PolyNormal(const Vector4& start, const Vector4& end) : start(start), end(end) {}
+};
+
+// Represents a vertex normal with a start and end point
+class VertexNormal {
+public:
+    Vector4 start;
+    Vector4 end;
+
+    VertexNormal() : start(Vector4()), end(Vector4()) {}
+    VertexNormal(const Vector4& start, const Vector4& end) : start(start), end(end) {}
+};
+
+// Represents a polygon in the scene
 class Poly {
 private:
-    std::vector<Vector4> vertices;       // List of vertices
-    std::vector<Vector4> vertexNormals;  // Normals for each vertex
-    Vector4 normal;                      // Normal vector for the polygon
-    Vector4 normalStart;                 // Start point for normal visualization
-    Vector4 normalEnd;                   // End point for normal visualization
-    bool hasNormal;                      // Indicates if the polygon has a predefined normal
-    COLORREF color;                      // Color of the polygon
+    std::vector<Vector4> vertices;
+    std::vector<VertexNormal> vertexNormals;
+    PolyNormal polyNormal;
+    bool hasPolyNormal;
+    bool hasVertexNormal;
+    COLORREF color;
 
 public:
-    // Constructor
     Poly();
 
-    // Add a vertex and its normal (optional)
     void addVertex(const Vector4& vertex);
-    void addVertexNormal(const Vector4& normal);
+    void addVertexNormal(const VertexNormal& normal);
 
-    // Get vertices
     std::vector<Vector4>& getVertices();
     const std::vector<Vector4>& getVertices() const;
 
-    // Get vertex normals
-    std::vector<Vector4>& getVertexNormals();
-    const std::vector<Vector4>& getVertexNormals() const;
+    std::vector<VertexNormal>& getVertexNormals();
+    const std::vector<VertexNormal>& getVertexNormals() const;
 
-    // Get the number of vertices
+    const PolyNormal& getPolyNormal() const;
+
+    void setPolyNormal(const PolyNormal& normal);
+    void calculatePolyNormal(const Vector4& centroid, const Vector4& direction);
+
+    bool hasPolyNormalDefined() const;
+    bool hasVertexNormalsDefined() const;
+
     size_t getVertexCount() const;
 
-    // Polygon color management
     void setColor(COLORREF c);
     COLORREF getColor() const;
 
-    // Polygon normal management
-    void setNormal(const Vector4& normal);
-    void setNormalWithVisualization(const Vector4& centroid, const Vector4& direction, double scale = 25.0);
-    const Vector4& getNormal() const;
-    const Vector4& getNormalStart() const;
-    const Vector4& getNormalEnd() const;
-    bool hasPredefinedNormal() const;
-
-    // Calculate normal from vertices
-    void calculateNormal();
-
-    // Apply a transformation to the polygon
     void applyTransform(const Matrix4& transform);
 
-    // Calculate the bounding box (optional)
     void calculateBoundingBox(Vector4& min, Vector4& max) const;
 
-    // Debugging: Print polygon details
     void print() const;
 };
 

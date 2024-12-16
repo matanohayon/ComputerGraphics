@@ -131,6 +131,17 @@ Matrix4 Matrix4::orthographic(double left, double right, double bottom, double t
     return mat;
 }
 
+Matrix4 Matrix4::withoutTranslation() const {
+    Matrix4 result = *this; // Start with a copy of the current matrix
+
+    // Zero out the translation components in the 4th column
+    result.m[0][3] = 0.0;
+    result.m[1][3] = 0.0;
+    result.m[2][3] = 0.0;
+
+    return result;
+}
+
 // Perspective projection matrix
 Matrix4 Matrix4::perspective(double fov, double aspect, double near, double far, double d) {
     Matrix4 mat;

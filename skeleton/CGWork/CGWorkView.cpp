@@ -90,6 +90,8 @@ CCGWorkView::CCGWorkView()
 {
 	m_draw_poly_normals = false;
 	m_draw_vertex_normals = false;
+	m_draw_bounding_box = false;
+	m_uniform_color = false;
 
 	// Set default values
 	m_nAxis = ID_AXIS_X;
@@ -246,7 +248,7 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 
 	for (size_t i = 0; i < vertices.size(); ++i) {
 		const Vector4& start = vertices[i];
-		const Vector4& end = vertices[(i + 1) % vertices.size()]; // Wrap to first vertex
+		const Vector4& end = vertices[(i + 1) % vertices.size()]; // Wrap to the first vertex
 
 		LineDrawer::DrawLine(
 			pDC->m_hDC,
@@ -258,8 +260,11 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 }
 
 void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color) {
-	const Vector4& normalStart = poly.getNormalStart();
-	const Vector4& normalEnd = poly.getNormalEnd();
+	if (!poly.hasPolyNormalDefined()) return; // Ensure the polygon has a normal
+
+	const PolyNormal& polyNormal = poly.getPolyNormal(); // Use PolyNormal abstraction
+	const Vector4& normalStart = polyNormal.start;
+	const Vector4& normalEnd = polyNormal.end;
 
 	LineDrawer::DrawLine(
 		pDC->m_hDC,
@@ -268,27 +273,61 @@ void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHei
 		color
 	);
 }
+
 void CCGWorkView::DrawVertexNormals(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color) {
-	if (!poly.hasPredefinedNormal()) return;
+	if (!poly.hasVertexNormalsDefined()) return; // Ensure the polygon has vertex normals
 
-	const std::vector<Vector4>& vertices = poly.getVertices();
-	const std::vector<Vector4>& vertexNormals = poly.getVertexNormals();
+	const std::vector<VertexNormal>& vertexNormals = poly.getVertexNormals();
 
-	if (vertices.size() != vertexNormals.size()) return; // Ensure sizes match
-	int extendNorm = 30;
-	for (size_t i = 0; i < vertices.size(); ++i) {
-		const Vector4& vertex = vertices[i];
-		const Vector4 normalEnd = vertex + vertexNormals[i]*extendNorm; // Scale the normal if needed
-
+	for (const VertexNormal& vertexNormal : vertexNormals) {
+		const Vector4& normalStart = vertexNormal.start;
+		const Vector4& normalEnd = vertexNormal.end;
+		const Vector4 unitNormal = (normalEnd - normalStart).normalize()*13.0;
+		const Vector4 newEnd = normalStart + unitNormal;
 		LineDrawer::DrawLine(
 			pDC->m_hDC,
-			Vector4(static_cast<double>(vertex.x), static_cast<double>(screenHeight - vertex.y), 0.0),
-			Vector4(static_cast<double>(normalEnd.x), static_cast<double>(screenHeight - normalEnd.y), 0.0),
+			Vector4(static_cast<double>(normalStart.x), static_cast<double>(screenHeight - normalStart.y), 0.0),
+			Vector4(static_cast<double>(newEnd.x), static_cast<double>(screenHeight - newEnd.y), 0.0),
 			color
 		);
 	}
 }
 
+
+
+void CCGWorkView::DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color) {
+	// Extract min and max points
+	const Vector4& min = bbox.min;
+	const Vector4& max = bbox.max;
+
+	// Define the 8 corners of the bounding box
+	std::vector<Vector4> corners = {
+		{min.x, min.y, min.z, 1.0}, {max.x, min.y, min.z, 1.0},
+		{max.x, max.y, min.z, 1.0}, {min.x, max.y, min.z, 1.0},
+		{min.x, min.y, max.z, 1.0}, {max.x, min.y, max.z, 1.0},
+		{max.x, max.y, max.z, 1.0}, {min.x, max.y, max.z, 1.0}
+	};
+
+	// Define the 12 edges of the bounding box
+	std::vector<std::pair<int, int>> edges = {
+		{0, 1}, {1, 2}, {2, 3}, {3, 0}, // Bottom face
+		{4, 5}, {5, 6}, {6, 7}, {7, 4}, // Top face
+		{0, 4}, {1, 5}, {2, 6}, {3, 7}  // Vertical edges
+	};
+
+	// Draw each edge of the bounding box
+	for (const auto& edge : edges) {
+		const Vector4& start = corners[edge.first];
+		const Vector4& end = corners[edge.second];
+
+		LineDrawer::DrawLine(
+			pDC->m_hDC,
+			Vector4(static_cast<double>(start.x), static_cast<double>(screenHeight - start.y), 0.0),
+			Vector4(static_cast<double>(end.x), static_cast<double>(screenHeight - end.y), 0.0),
+			color
+		);
+	}
+}
 
 
 
@@ -302,31 +341,35 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 
 	CRect r;
 	GetClientRect(&r);
-
 	// Use the double-buffered DC to avoid flickering
 	CDC* pDCToUse = m_pDbDC;
 	pDCToUse->FillSolidRect(&r, scene.getBackgroundColor()); // Use scene's background color
-
 	double screenWidth = static_cast<double>(r.Width());
 	double screenHeight = static_cast<double>(r.Height());
-
+	bool firstMsgNoVerexNormals = true;
 	// Iterate through the polygons in the scene and draw them
 	for (const Poly& poly : scene.getPolygons()) {
 		const std::vector<Vector4>& vertices = poly.getVertices();
 		COLORREF color = poly.getColor(); // Get the color for the polygon
-
+		if (m_uniform_color) {
+			color = RGB(255, 255, 255);
+		}
 		// Draw polygon edges
 		DrawPolygonEdges(pDCToUse, poly, screenHeight, color);
-
+		if (!m_draw_bounding_box) {
+			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, RGB(0, 0, 255)); // Blue color for bounding box
+		}
 		// Draw polygon normals if the flag is set
 		if (!m_draw_poly_normals) {
 			DrawPolygonNormal(pDCToUse, poly, screenHeight, RGB(255, 0, 0)); // Red color for normals
 		}
-
 		// Draw vertex normals if the flag is set
 		if (!m_draw_vertex_normals) {
 			if (!scene.hasVertexNormalsAttribute()) {
-				AfxMessageBox(_T("The Object does not have vertex normals!"));
+				if (firstMsgNoVerexNormals) {
+					AfxMessageBox(_T("The Object does not have vertex normals!"));
+					firstMsgNoVerexNormals = false;	//only one message needed
+				}
 			}
 			else {
 				DrawVertexNormals(pDCToUse, poly, screenHeight, RGB(0, 255, 0)); // Green color for normals
@@ -429,7 +472,6 @@ void CCGWorkView::OnFileLoad() {
 		t = t * scaling;
 		// Translate to the screen center
 		t = t * translateToOrigin;
-
 		scene.applyTransform(t);
 
 		scene.updateIsFirstDraw(false);
