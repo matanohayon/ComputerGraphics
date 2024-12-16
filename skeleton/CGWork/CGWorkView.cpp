@@ -265,8 +265,8 @@ void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHei
 	const PolyNormal& polyNormal = poly.getPolyNormal(); // Use PolyNormal abstraction
 	const Vector4& normalStart = polyNormal.start;
 	const Vector4& normalEnd = polyNormal.end;
-	const Vector4 unitNormal = (normalEnd - normalStart).normalize() * 13.0;
-	const Vector4 newEnd = normalStart + unitNormal;
+
+
 
 	LineDrawer::DrawLine(
 		pDC->m_hDC,
@@ -350,6 +350,7 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 	double screenWidth = static_cast<double>(r.Width());
 	double screenHeight = static_cast<double>(r.Height());
 	bool firstMsgNoVerexNormals = true;
+	
 	// Iterate through the polygons in the scene and draw them
 	for (const Poly& poly : scene.getPolygons()) {
 		const std::vector<Vector4>& vertices = poly.getVertices();
@@ -359,9 +360,7 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 		}
 		// Draw polygon edges
 		DrawPolygonEdges(pDCToUse, poly, screenHeight, color);
-		if (!m_draw_bounding_box) {
-			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, RGB(0, 0, 255)); // Blue color for bounding box
-		}
+
 		// Draw polygon normals if the flag is set
 		if (!m_draw_poly_normals) {
 			DrawPolygonNormal(pDCToUse, poly, screenHeight, RGB(255, 0, 0)); // Red color for normals
@@ -379,6 +378,12 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 			}
 		}
 	}
+	if (scene.hasBoundingBox) {
+		if (!m_draw_bounding_box) {
+			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, RGB(0, 0, 255)); // Blue color for bounding box
+		}
+	}
+
 	if (pDCToUse != m_pDC) {
 		m_pDC->BitBlt(r.left, r.top, r.Width(), r.Height(), pDCToUse, r.left, r.top, SRCCOPY);
 	}
@@ -422,13 +427,12 @@ void CCGWorkView::OnDestroy()
 
 void CCGWorkView::OnFileLoad() {
 	TCHAR szFilters[] = _T("IRIT Data Files (*.itd)|*.itd|All Files (*.*)|*.*||");
-
 	CFileDialog dlg(TRUE, _T("itd"), _T("*.itd"), OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, szFilters);
 
 	if (dlg.DoModal() == IDOK) {
 		m_strItdFileName = dlg.GetPathName(); // Full path and filename
 		scene.clear(); // Clear the existing scene data
-
+		scene.hasBoundingBox = true;
 		// Load and process the IRIT file
 		CGSkelProcessIritDataFiles(m_strItdFileName, 1);
 

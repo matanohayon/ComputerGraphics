@@ -14,6 +14,7 @@ Scene::Scene()
     hasVertexNormals(false),            // Default: no vertex normals
     hasPolyNormals(false),              // Default: no polygon normals
     isFirstDraw(true),
+    hasBoundingBox(false),
     showBoundingBox(false) {}           // Default: don't show bounding box
 
 // Add a polygon to the scene
