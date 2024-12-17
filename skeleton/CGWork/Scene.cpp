@@ -14,6 +14,7 @@ Scene::Scene()
     hasVertexNormals(false),            // Default: no vertex normals
     hasPolyNormals(false),              // Default: no polygon normals
     isFirstDraw(true),
+    hasBoundingBox(false),
     showBoundingBox(false) {}           // Default: don't show bounding box
 
 // Add a polygon to the scene
@@ -36,17 +37,48 @@ size_t Scene::getPolygonCount() const {
 void Scene::applyTransform(const Matrix4& transform) {
     sceneTransform = transform * sceneTransform; // Pre-multiply to apply new transform first
 
-    // Apply transformation to all vertices in polygons
+    // Create a transformation matrix without translation for normals
+    Matrix4 normalTransform = sceneTransform.withoutTranslation();
+
+    // Apply transformation to all polygons in the scene
     for (Poly& poly : polygons) {
+
+        // Apply the full transformation to all vertices
         for (Vector4& vertex : poly.getVertices()) {
-            vertex = sceneTransform.transform(vertex);
+            vertex = transform.transform(vertex);
+        }
+
+        // Apply the transformation to vertex normals
+        if (poly.hasVertexNormalsDefined()) {
+            for (VertexNormal& vertexNormal : poly.getVertexNormals()) {
+                vertexNormal.start = sceneTransform.transform(vertexNormal.start);
+                vertexNormal.end = sceneTransform.transform(vertexNormal.end);
+
+                // Transform only the direction vector (end - start)
+                Vector4 direction = (vertexNormal.end - vertexNormal.start).normalize();
+                vertexNormal.end = vertexNormal.start + direction; // Update the end point
+            }
+        }
+
+        // Apply the transformation to polygon normal and its visualization points
+        if (poly.hasPolyNormalDefined()) {
+            // Transform the start and end points of the polygon normal
+            Vector4 transformedPolyNormalStart = sceneTransform.transform(poly.getPolyNormal().start);
+            Vector4 transformedPolyNormalEnd = sceneTransform.transform(poly.getPolyNormal().end);
+
+            // Calculate the transformed normal vector (direction)
+            Vector4 transformedDirection = (transformedPolyNormalEnd - transformedPolyNormalStart).normalize();
+
+            // Use the transformed start point as the new centroid and update the polygon normal
+            poly.setPolyNormal(PolyNormal(transformedPolyNormalStart, transformedPolyNormalStart + transformedDirection));
         }
     }
 
     // Apply the transformation to the bounding box
-    applyTransformToBoundingBox(sceneTransform);
-
+    applyTransformToBoundingBox(transform); // Use the full transformation for the bounding box
 }
+
+
 
 void Scene::applyTransformToBoundingBox(const Matrix4& transform) {
     Vector4 corners[8] = {

@@ -25,6 +25,8 @@ public:
     static Matrix4 rotateY(double angle);
     static Matrix4 rotateZ(double angle);
 
+    Matrix4 withoutTranslation() const;
+
     // Projection matrices
     static Matrix4 orthographic(double left, double right, double bottom, double top, double near, double far);
     static Matrix4 perspective(double fov, double aspect, double near, double far, double d);

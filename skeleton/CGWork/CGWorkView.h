@@ -10,6 +10,8 @@
 #endif // _MSC_VER > 1000
 
 #include "Poly.h"
+#include "Scene.h"
+
 #include "gl\gl.h"    // Include the standard CGWork  headers
 #include "gl\glu.h"   // Add the utility library
 
@@ -32,6 +34,8 @@ public:
 private:
 	bool m_draw_poly_normals; //flag to choose whether to draw poly normals
 	bool m_draw_vertex_normals;//flag to choose whether to draw vertex normals
+	bool m_draw_bounding_box;
+	bool m_uniform_color;
 
 	int m_nAxis;				// Axis of Action, X Y or Z
 	int m_nAction;				// Rotate, Translate, Scale
@@ -92,7 +96,7 @@ private:
 	void DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
 	void DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
 	void DrawVertexNormals(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
-
+	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CCGWorkView)
@@ -129,6 +133,16 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+
+	afx_msg void OnBoundingBox();
+	afx_msg void OnUpdateBoundingBox(CCmdUI* pCmdUI);
+
+	afx_msg void OnVertexNormal();
+	afx_msg void OnUpdateVertexNormal(CCmdUI* pCmdUI);
+
+	afx_msg void OnPolyNormal();
+	afx_msg void OnUpdatePolyNormal(CCmdUI* pCmdUI);
+
 
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

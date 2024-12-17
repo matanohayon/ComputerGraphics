@@ -124,7 +124,7 @@ void CGSkelDumpOneTraversedObject(IPObjectStruct *PObj,
 *   bool:		false - fail, true - success.                                *
 *****************************************************************************/
 bool CGSkelStoreData(IPObjectStruct* PObj) {
-	int i;
+	//int i;
 	const char* Str;
 	double RGB[3], Transp;
 	IPPolygonStruct* PPolygon;
@@ -181,46 +181,51 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 		PVertex = PPolygon->PVertex;
 
 		do {
+			// Process vertex coordinates
 			Vector4 vertex(PVertex->Coord[0], PVertex->Coord[1], PVertex->Coord[2]);
 			centroid = centroid + vertex;
 			poly.addVertex(vertex);
 			vertexCount++;
 
+			// Process vertex normals (if available)
 			if (IP_HAS_NORMAL_VRTX(PVertex)) {
 				Vector4 vertexNormal(PVertex->Normal[0], PVertex->Normal[1], PVertex->Normal[2]);
-				vertexNormal = vertexNormal.normalize();
-				poly.addVertexNormal(vertexNormal);
-				scene.updateHasVertexNormals(true);
+				vertexNormal = vertexNormal.normalize(); // Ensure the normal is unit-length
+				poly.addVertexNormal(VertexNormal(vertex, vertex + vertexNormal)); // Add vertex normal with start and end points
+				scene.updateHasVertexNormals(true); // Update scene's vertex normal flag
 			}
 
 			PVertex = PVertex->Pnext;
 		} while (PVertex != PPolygon->PVertex && PVertex != NULL);
 
-		centroid = centroid / static_cast<double>(vertexCount);
+		centroid = centroid / static_cast<double>(vertexCount); // Finalize centroid
 
-		// Set the polygon normal
+		// Process polygon normals
 		if (IP_HAS_PLANE_POLY(PPolygon)) {
+			// Use predefined polygon normal
 			Vector4 pn(PPolygon->Plane[0], PPolygon->Plane[1], PPolygon->Plane[2]);
-			Vector4 polyNormal = pn.normalize();
-			poly.setNormalWithVisualization(centroid, polyNormal);
+			Vector4 polyNormal = pn.normalize(); // Normalize to unit vector
+			poly.setPolyNormal(PolyNormal(centroid, centroid + polyNormal)); // Stores start and end points
 		}
 		else if (vertexCount >= 3) {
-			Vector4 edge1 = poly.getVertices()[1] - poly.getVertices()[0];
-			Vector4 edge2 = poly.getVertices()[2] - poly.getVertices()[0];
+			// Calculate polygon normal from the first three vertices
+			const std::vector<Vector4>& vertices = poly.getVertices();
+			Vector4 edge1 = vertices[1] - vertices[0];
+			Vector4 edge2 = vertices[2] - vertices[0];
 			Vector4 calculatedNormal = edge1.cross(edge2).normalize();
-			poly.setNormalWithVisualization(centroid, calculatedNormal);
+			poly.setPolyNormal(PolyNormal(centroid, centroid + calculatedNormal)); // Stores start and end points
 		}
 		else {
-			std::cerr << "Skipping polygon with fewer than 3 vertices." << std::endl;
+			// Skip polygons with fewer than 3 vertices
 			continue;
 		}
 
 		// Add the completed polygon to the global Scene
 		scene.addPolygon(poly);
 	}
-
 	return true;
 }
+
 
 
 

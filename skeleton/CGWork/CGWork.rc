@@ -80,6 +80,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Orthographic",               ID_VIEW_ORTHOGRAPHIC
         MENUITEM "&Perspective",                ID_VIEW_PERSPECTIVE
+        MENUITEM SEPARATOR
+        MENUITEM "Bounding Box",                ID_VIEW_BOUNDINGBOX
+        MENUITEM "Vertex Normals",              ID_VIEW_VERTEXNORMAL
+        MENUITEM "Polygon Normals",             ID_VIEW_POLYGONNORMALS
     END
     POPUP "A&ction"
     BEGIN

@@ -63,13 +63,16 @@
 #define ID_OPTIONS_MOUSESENSITIVITY     32799
 #define ID_OPTIONS_OBJECTCOLOR          32801
 #define ID_OPTIONS_BACKGROUNDCOLOR      32802
+#define ID_VIEW_BOUNDINGBOX             32803
+#define ID_VIEW_VERTEXNORMAL            32804
+#define ID_VIEW_POLYGONNORMALS          32805
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        143
-#define _APS_NEXT_COMMAND_VALUE         32803
+#define _APS_NEXT_COMMAND_VALUE         32806
 #define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -27,6 +27,7 @@ private:
     bool showNormals;             // Flag to show normals
     bool showBoundingBox;         // Flag to show bounding box
 
+
     bool hasVertexNormals;        // Indicates if the scene has vertex normals
     bool hasPolyNormals;          // Indicates if the scene has polygon normals
 
@@ -34,6 +35,8 @@ private:
 
 public:
     Scene();
+
+    bool hasBoundingBox;
 
     // Add a polygon to the scene
     void addPolygon(const Poly& poly);
