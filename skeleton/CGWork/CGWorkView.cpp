@@ -13,6 +13,9 @@ using std::cout;
 using std::endl;
 #include "MaterialDlg.h"
 #include "LightDialog.h"
+#include "PerspectiveDlg.h"
+#include "MouseSensitivityDlg.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,6 +73,14 @@ BEGIN_MESSAGE_MAP(CCGWorkView, CView)
 	ON_COMMAND(ID_LIGHT_SHADING_GOURAUD, OnLightShadingGouraud)
 	ON_UPDATE_COMMAND_UI(ID_LIGHT_SHADING_GOURAUD, OnUpdateLightShadingGouraud)
 	ON_COMMAND(ID_LIGHT_CONSTANTS, OnLightConstants)
+
+	ON_COMMAND(ID_OPTIONS_PERSPECTIVECONTROL, OnPerspectiveParameters)
+	ON_COMMAND(ID_OPTIONS_MOUSESENSITIVITY, &CCGWorkView::OnOptionsMousesensitivity)
+
+	ON_WM_LBUTTONDOWN()
+	ON_WM_MOUSEMOVE()
+	ON_WM_LBUTTONUP()
+
 	//}}AFX_MSG_MAP
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
@@ -109,6 +120,7 @@ CCGWorkView::CCGWorkView()
 	m_lights[LIGHT_ID_1].enabled=true;
 	m_pDbBitMap = NULL;
 	m_pDbDC = NULL;
+	m_isDragging = false;
 }
 
 CCGWorkView::~CCGWorkView()
@@ -296,6 +308,9 @@ void CCGWorkView::DrawVertexNormals(CDC* pDC, const Poly& poly, double screenHei
 // CCGWorkView drawing
 /////////////////////////////////////////////////////////////////////////////
 void CCGWorkView::OnDraw(CDC* pDC) {
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+
 	CCGWorkDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc) return;
@@ -305,6 +320,8 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 
 	// Use the double-buffered DC to avoid flickering
 	CDC* pDCToUse = m_pDbDC;
+
+	scene.setColors(pApp->Object_color, RGB(0, 255, 0), pApp->Background_color); // setting the object color and the backgrond
 	pDCToUse->FillSolidRect(&r, scene.getBackgroundColor()); // Use scene's background color
 
 	double screenWidth = static_cast<double>(r.Width());
@@ -612,4 +629,90 @@ void CCGWorkView::OnTimer(UINT_PTR nIDEvent)
 	CView::OnTimer(nIDEvent);
 	if (nIDEvent == 1)
 		Invalidate();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void CCGWorkView::OnPerspectiveParameters()
+{
+	// Create and open the dialog
+	PerspectiveDlg paramDlg;
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+
+	// Optionally initialize values
+	paramDlg.d = pApp->d; // Example default value
+	paramDlg.fovy = pApp->fovy; // Example default value
+
+	if (paramDlg.DoModal() == IDOK)
+	{
+		// Retrieve updated values after the dialog is closed
+		pApp->d = paramDlg.d;
+		pApp->fovy = paramDlg.fovy;
+
+		// Use the parameters (e.g., store or apply them)
+
+	}
+}
+
+
+void CCGWorkView::OnOptionsMousesensitivity()
+{
+	// TODO: Add your command handler code here
+	MouseSensitivityDlg dlg;
+
+	if (dlg.DoModal() == IDOK)
+	{
+
+		// Handle OK click if needed
+	}
+}
+
+
+/////////////////////////////// MOUSE CONTROL //////////////////////////////////////////////
+
+void CCGWorkView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// Begin dragging
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	m_isDragging = true;
+	SetCapture();  // Capture mouse events globally for this window
+
+	pApp->start = point;
+	// Log or process the starting point
+	TRACE(_T("Mouse Down at: X=%d, Y=%d\n"), point.x, point.y);
+
+	CView::OnLButtonDown(nFlags, point);
+}
+
+void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
+{
+	if (m_isDragging)
+	{
+		// Handle dragging logic (e.g., drawing, updating UI, etc.)
+		TRACE(_T("Mouse Move at: X=%d, Y=%d\n"), point.x, point.y);
+
+		// If needed, convert to screen coordinates
+		CPoint screenPoint = point;
+		ClientToScreen(&screenPoint);
+		TRACE(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+	}
+
+	CView::OnMouseMove(nFlags, point);
+}
+
+void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	if (m_isDragging)
+	{
+		CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+		// End dragging
+		m_isDragging = false;
+		ReleaseCapture();  // Release mouse capture
+
+		pApp->end = point;
+
+		// Log or process the final point
+		TRACE(_T("Mouse Up at: X=%d, Y=%d\n"), point.x, point.y);
+	}
+
+	CView::OnLButtonUp(nFlags, point);
 }

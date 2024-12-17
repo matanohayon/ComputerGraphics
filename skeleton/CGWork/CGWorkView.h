@@ -63,6 +63,8 @@ private:
 // Implementation
 public:
 	virtual ~CCGWorkView();
+
+	bool m_isDragging;
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -120,6 +122,14 @@ protected:
 	afx_msg void OnLightShadingGouraud();
 	afx_msg void OnUpdateLightShadingGouraud(CCmdUI* pCmdUI);
 	afx_msg void OnLightConstants();
+
+	afx_msg void OnPerspectiveParameters();
+	afx_msg void OnOptionsMousesensitivity();
+
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:

@@ -22,6 +22,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 		// NOTE - the ClassWizard will add and remove mapping macros here.
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	ON_WM_CREATE()
+	ON_COMMAND(ID_OPTIONS_OBJECTCOLOR, &CMainFrame::OnObjectColor)
+	ON_COMMAND(ID_OPTIONS_BACKGROUNDCOLOR, &CMainFrame::OnBackgroundColor)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -115,3 +117,39 @@ CStatusBar& CMainFrame::getStatusBar() {
 
 
 
+void CMainFrame::OnObjectColor()
+{
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	// Create a color dialog with default options
+	COLORREF initialColor = pApp->Object_color;
+	CColorDialog colorDlg(initialColor);
+
+	// Display the dialog and handle the user's choice
+	if (colorDlg.DoModal() == IDOK)
+	{
+		// Get the selected color
+		COLORREF selectedColor = colorDlg.GetColor();
+
+		// Use the selected color (e.g., store it, apply it, etc.)
+		pApp->Object_color = selectedColor;
+	}
+}
+
+void CMainFrame::OnBackgroundColor()
+{
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	COLORREF initialColor = pApp->Background_color;
+	CColorDialog colorDlg(initialColor);
+
+	// Display the dialog and handle the user's choice
+	if (colorDlg.DoModal() == IDOK)
+	{
+		// Get the selected color
+		COLORREF selectedColor = colorDlg.GetColor();
+
+		// Use the selected color (e.g., store it, apply it, etc.)
+
+		pApp->Background_color = selectedColor;
+
+	}
+}

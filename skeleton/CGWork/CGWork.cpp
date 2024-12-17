@@ -82,6 +82,16 @@ BOOL CCGWorkApp::InitInstance()
 	m_pMainWnd->ShowWindow(SW_SHOW);
 	m_pMainWnd->UpdateWindow();
 
+	t_slider_value = 1;
+	r_slider_value = 1;
+	s_slider_value = 1;
+
+	Object_color = RGB(255, 255, 255);
+	Background_color = RGB(0, 0, 0);
+
+	d = 15;
+	fovy = 50;
+
 	return TRUE;
 }
 

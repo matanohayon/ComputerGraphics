@@ -205,6 +205,8 @@
     </ClCompile>
     <ClCompile Include="MaterialDlg.cpp" />
     <ClCompile Include="Matrix4.cpp" />
+    <ClCompile Include="MouseSensitivityDlg.cpp" />
+    <ClCompile Include="PerspectiveDlg.cpp" />
     <ClCompile Include="PngWrapper.cpp" />
     <ClCompile Include="Poly.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -221,7 +223,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
-    <ClCompile Include="Vector3.cpp" />
+    <ClCompile Include="Vector4.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CGWork.rc" />
@@ -237,6 +239,8 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MaterialDlg.h" />
     <ClInclude Include="Matrix4.h" />
+    <ClInclude Include="MouseSensitivityDlg.h" />
+    <ClInclude Include="PerspectiveDlg.h" />
     <ClInclude Include="PngWrapper.h" />
     <ClInclude Include="Poly.h" />
     <ClInclude Include="Resource.h" />
@@ -266,7 +270,7 @@
     <ClInclude Include="..\include\triv_lib.h" />
     <ClInclude Include="..\include\trng_lib.h" />
     <ClInclude Include="..\include\user_lib.h" />
-    <ClInclude Include="Vector3.h" />
+    <ClInclude Include="Vector4.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\CGWork.ico" />
