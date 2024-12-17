@@ -13,6 +13,7 @@
 
 */
 #include "Vector4.h" // Include Vector4
+#include "Vertex.h" // Include Vector4
 #include "Poly.h"    // Include Poly (renamed from Polygon)
 #include "Scene.h"  // Include the Scene class definition
 Scene scene; // Global scene object to hold all polygons
@@ -179,46 +180,42 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 
 		PVertex = PPolygon->PVertex;
 
+		//Iterate over the vertices of the polygon
 		do {
-			// Process vertex coordinates
-			Vector4 vertex(PVertex->Coord[0], PVertex->Coord[1], PVertex->Coord[2]);
-			centroid = centroid + vertex;
-			poly.addVertex(vertex);
-			vertexCount++;
+			Vertex vertex(PVertex->Coord[0], PVertex->Coord[1], PVertex->Coord[2]); //create vertex from the file coordinates
+			vertexCount++;//update cound vertices
+			centroid = centroid + vertex; // update the centroid(later will devide by vertex count
 
 			// Process vertex normals (if available)
 			if (IP_HAS_NORMAL_VRTX(PVertex)) {
-				Vector4 vertexNormal(PVertex->Normal[0], PVertex->Normal[1], PVertex->Normal[2]);
-				vertexNormal = vertexNormal.normalize(); // Ensure the normal is unit-length
-				poly.addVertexNormal(VertexNormal(vertex, vertex + vertexNormal)); // Add vertex normal with start and end points
-				scene.updateHasVertexNormals(true); // Update scene's vertex normal flag
+				const Vector4 vertexNormal = Vector4(PVertex->Normal[0], PVertex->Normal[1], PVertex->Normal[2]).normalize();//normalize the vertex normal
+				vertex.setNormal(vertex, vertex + vertexNormal); // Add vertex normal with start and end points
+				scene.updateHasVertexNormals(true);
 			}
-
-			PVertex = PVertex->Pnext;
+			poly.addVertex(vertex); // assign the vertex it to the polygon
+			PVertex = PVertex->Pnext; //advance the pointer to the next vertex
 		} while (PVertex != PPolygon->PVertex && PVertex != NULL);
+		centroid = centroid / static_cast<double>(vertexCount); // Finalize centroid. if the polygon is convex than the cenroid should be inside.
 
-		centroid = centroid / static_cast<double>(vertexCount); // Finalize centroid
 
-		// Process polygon normals
+		// Process polygon normals if they exist in the file
 		if (IP_HAS_PLANE_POLY(PPolygon)) {
-			// Use predefined polygon normal
-			Vector4 pn(PPolygon->Plane[0], PPolygon->Plane[1], PPolygon->Plane[2]);
-			Vector4 polyNormal = pn.normalize(); // Normalize to unit vector
-			poly.setPolyNormal(PolyNormal(centroid, centroid + polyNormal)); // Stores start and end points
+			const Vector4 pn=Vector4(PPolygon->Plane[0], PPolygon->Plane[1], PPolygon->Plane[2]).normalize(); // the normal to the polygon plane
+			poly.setPolyNormal(PolyNormal(centroid, centroid + pn)); // Stores start and end points
 		}
+		// calculate polynormal if not exist in the file
 		else if (vertexCount >= 3) {
 			// Calculate polygon normal from the first three vertices
-			const std::vector<Vector4>& vertices = poly.getVertices();
-			Vector4 edge1 = vertices[1] - vertices[0];
-			Vector4 edge2 = vertices[2] - vertices[0];
-			Vector4 calculatedNormal = edge1.cross(edge2).normalize();
+			const std::vector<Vertex>& vertices = poly.getVertices(); // Correct type
+			const Vector4 edge1 = vertices[1] - vertices[0];
+			const Vector4 edge2 = vertices[2] - vertices[0];
+			const Vector4 calculatedNormal = edge1.cross(edge2).normalize(); //cross the edges to get the normal to the plane
 			poly.setPolyNormal(PolyNormal(centroid, centroid + calculatedNormal)); // Stores start and end points
 		}
 		else {
-			// Skip polygons with fewer than 3 vertices
+			// Skip polygons with fewer than 3 vertices// these should not exist
 			continue;
 		}
-
 		// Add the completed polygon to the global Scene
 		scene.addPolygon(poly);
 	}

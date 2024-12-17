@@ -68,6 +68,8 @@ Vector4 Matrix4::transform(const Vector4& v) const {
 }
 
 
+
+
 // Translation matrix
 Matrix4 Matrix4::translate(double dx, double dy, double dz) {
     Matrix4 mat;
@@ -160,10 +162,6 @@ void Matrix4::setPerspectiveD(double d) {
     m[3][3] = d;
 }
 
-// Inverse of the matrix (simplified placeholder)
-Matrix4 Matrix4::inverse() const {
-    throw std::runtime_error("Matrix inversion is not implemented yet.");
-}
 
 // Print the matrix (for debugging)
 void Matrix4::print() const {
@@ -173,4 +171,59 @@ void Matrix4::print() const {
         }
         std::cout << std::endl;
     }
+}
+
+// Transpose the matrix
+Matrix4 Matrix4::transpose() const {
+    Matrix4 result;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            result.m[i][j] = m[j][i];
+        }
+    }
+    return result;
+}
+
+
+Matrix4 Matrix4::inverse() const {
+    Matrix4 result;
+    double inv[16], det;
+    double mat[16];
+
+    // Flatten the matrix into a 1D array
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            mat[i * 4 + j] = m[i][j];
+        }
+    }
+
+    // Compute cofactors and determinant
+    inv[0] = mat[5] * mat[10] * mat[15] - mat[5] * mat[11] * mat[14] -
+        mat[9] * mat[6] * mat[15] + mat[9] * mat[7] * mat[14] +
+        mat[13] * mat[6] * mat[11] - mat[13] * mat[7] * mat[10];
+
+    inv[4] = -mat[4] * mat[10] * mat[15] + mat[4] * mat[11] * mat[14] +
+        mat[8] * mat[6] * mat[15] - mat[8] * mat[7] * mat[14] -
+        mat[12] * mat[6] * mat[11] + mat[12] * mat[7] * mat[10];
+
+    // Determinant calculation
+    det = mat[0] * inv[0] + mat[1] * inv[4];
+    if (std::abs(det) < 1e-6) {
+        throw std::runtime_error("Matrix is singular and cannot be inverted.");
+    }
+
+    det = 1.0 / det;
+
+    // Scale by determinant
+    for (int i = 0; i < 16; ++i) {
+        inv[i] *= det;
+    }
+
+    // Rebuild the 4x4 matrix
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            result.m[i][j] = inv[i * 4 + j];
+        }
+    }
+    return result;
 }

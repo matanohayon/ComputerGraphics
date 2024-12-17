@@ -34,9 +34,11 @@ public:
     // Modify perspective parameter 'd'
     void setPerspectiveD(double d);
 
-    // Inverse of the matrix
-    Matrix4 inverse() const; // Placeholder for matrix inversion
+    // Transpose function
+    Matrix4 transpose() const;
 
+    // Inverse function
+    Matrix4 inverse() const;
     // Print the matrix (for debugging)
     void print() const;
 };
