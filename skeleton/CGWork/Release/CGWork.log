@@ -3,18 +3,17 @@
 MSVCRT.lib(initializers.obj) : warning LNK4098: defaultlib 'msvcrtd.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
   Finished generating code
-Vertex.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
+Vertex.obj : warning LNK4204: '' is missing debugging information for referencing module; linking object as if no debug info
 Vector4.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 StdAfx.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 Source.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
-Scene.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 Poly.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 PngWrapper.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 Matrix4.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 MaterialDlg.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 MainFrm.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 LineDrawer.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
-LightDialog.obj : warning LNK4204: '' is missing debugging information for referencing module; linking object as if no debug info
+LightDialog.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 iritSkel.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 CGWorkDoc.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
 CGWork.obj : warning LNK4204: 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc142.pdb' is missing debugging information for referencing module; linking object as if no debug info
@@ -25,7 +24,7 @@ zlib.lib(crc32.obj) : warning LNK4099: PDB 'vc140.pdb' was not found with 'zlib.
 zlib.lib(deflate.obj) : warning LNK4099: PDB 'vc140.pdb' was not found with 'zlib.lib(deflate.obj)' or at 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc140.pdb'; linking object as if no debug info
 zlib.lib(inffast.obj) : warning LNK4099: PDB 'vc140.pdb' was not found with 'zlib.lib(inffast.obj)' or at 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc140.pdb'; linking object as if no debug info
 zlib.lib(inflate.obj) : warning LNK4099: PDB '' was not found with 'zlib.lib(inflate.obj)' or at ''; linking object as if no debug info
-zlib.lib(inftrees.obj) : warning LNK4099: PDB '' was not found with 'zlib.lib(inftrees.obj)' or at ''; linking object as if no debug info
+zlib.lib(inftrees.obj) : warning LNK4099: PDB 'vc140.pdb' was not found with 'zlib.lib(inftrees.obj)' or at 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc140.pdb'; linking object as if no debug info
 zlib.lib(trees.obj) : warning LNK4099: PDB 'vc140.pdb' was not found with 'zlib.lib(trees.obj)' or at 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc140.pdb'; linking object as if no debug info
 zlib.lib(zutil.obj) : warning LNK4099: PDB 'vc140.pdb' was not found with 'zlib.lib(zutil.obj)' or at 'G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\CGWork\Release\vc140.pdb'; linking object as if no debug info
   CGWork.vcxproj -> G:\My Drive\technion\courses\Computer_Graphics\hw\cg\ComputerGraphics\skeleton\bin\Release\CGWork.exe
