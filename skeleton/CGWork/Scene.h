@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Poly.h"
+#include "Vertex.h"
 #include "Matrix4.h"
 #include "Vector4.h"
 #include <Windows.h>
@@ -27,9 +28,7 @@ private:
     bool showNormals;             // Flag to show normals
     bool showBoundingBox;         // Flag to show bounding box
 
-
     bool hasVertexNormals;        // Indicates if the scene has vertex normals
-    bool hasPolyNormals;          // Indicates if the scene has polygon normals
 
     bool isFirstDraw;             // Indicates if it is the first drawing
 

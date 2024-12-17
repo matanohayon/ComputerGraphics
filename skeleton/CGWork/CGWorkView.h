@@ -93,10 +93,11 @@ protected:
 
 	// New helper function declarations
 private:
-	void DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
+	void DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color, bool flagDrawNormal);
 	void DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
 	void DrawVertexNormals(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color);
 	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
+	void DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& end, double screenHeight, COLORREF color);
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CCGWorkView)
