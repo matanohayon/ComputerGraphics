@@ -15,22 +15,24 @@ Scene::Scene()
     hasVertexNormals(false),            // Default: no vertex normals
     isFirstDraw(true),
     hasBoundingBox(false),
-    showBoundingBox(false) {}           // Default: don't show bounding box
+    showBoundingBox(false) {
+    polygons = new std::vector<Poly*>;
+}           // Default: don't show bounding box
 
 // Add a polygon to the scene
-void Scene::addPolygon(const Poly& poly) {
-    polygons.push_back(poly);
+void Scene::addPolygon(Poly* poly) {
+    polygons->push_back(poly);
     calculateBoundingBox(); // Recalculate bounding box
 }
 
 // Get all polygons in the scene
-const std::vector<Poly>& Scene::getPolygons() const {
+const std::vector<Poly*>* Scene::getPolygons() const {
     return polygons;
 }
 
 // Get the total number of polygons
 size_t Scene::getPolygonCount() const {
-    return polygons.size();
+    return polygons->size();
 }
 
 
@@ -41,10 +43,10 @@ void Scene::applyTransform(const Matrix4& transform) {
     Matrix4 normalTransform = sceneTransform.inverse().transpose(); // Inverse-transpose for normals
 
     // Apply transformation to all polygons in the scene
-    for (Poly& poly : polygons) {
+    for (Poly* poly : *polygons) {
 
         // Apply the full transformation to all vertices
-        for (Vertex& vertex : poly.getVertices()) {
+        for (Vertex& vertex : poly->getVertices()) {
             // Transform vertex position
             vertex = transform.transform(vertex);
 
@@ -62,11 +64,11 @@ void Scene::applyTransform(const Matrix4& transform) {
         }
 
         // Apply the transformation to polygon normals
-        if (poly.hasPolyNormalDefined()) {
-            Vector4 direction = poly.getPolyNormal().end - poly.getPolyNormal().start;
+        if (poly->hasPolyNormalDefined()) {
+            Vector4 direction = poly->getPolyNormal().end - poly->getPolyNormal().start;
             Vector4 transformedDirection = normalTransform.transform(direction).normalize();
-            Vector4 transformedStart = transform.transform(poly.getPolyNormal().start);
-            poly.setPolyNormal(PolyNormal(transformedStart, transformedStart + transformedDirection));
+            Vector4 transformedStart = transform.transform(poly->getPolyNormal().start);
+            poly->setPolyNormal(PolyNormal(transformedStart, transformedStart + transformedDirection));
         }
     }
 
@@ -110,7 +112,7 @@ void Scene::calculateBoundingBox() {
 
 // Calculate the bounding box from all vertices
 void Scene::calculateBoundingBoxFromVertices() {
-    if (polygons.empty()) {
+    if (polygons->empty()) {
         boundingBox.min = Vector4(0, 0, 0, 1);
         boundingBox.max = Vector4(0, 0, 0, 1);
         return;
@@ -118,8 +120,8 @@ void Scene::calculateBoundingBoxFromVertices() {
     boundingBox.min = Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0);
     boundingBox.max = Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0);
 
-    for (const Poly& poly : polygons) {
-        for (const Vertex& vertex : poly.getVertices()) {
+    for (Poly* poly : *polygons) {
+        for (const Vertex& vertex : poly->getVertices()) {
             boundingBox.min.updateMin(vertex);
             boundingBox.max.updateMax(vertex);
         }
@@ -200,7 +202,7 @@ bool Scene::hasVertexNormalsAttribute() const {
 
 // Clear the scene
 void Scene::clear() {
-    polygons.clear();
+    polygons->clear();
     sceneTransform = Matrix4(); // Reset to identity matrix
     boundingBox = { Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0), Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0) };
     hasVertexNormals = false;

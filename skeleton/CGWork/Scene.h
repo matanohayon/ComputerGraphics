@@ -15,7 +15,7 @@ struct BoundingBox {
 
 class Scene {
 private:
-    std::vector<Poly> polygons;   // List of polygons in the scene
+    std::vector<Poly*> *polygons;   // List of polygons in the scene
     Matrix4 sceneTransform;       // Transformation matrix for the entire scene
     BoundingBox boundingBox;      // Scene bounding box
 
@@ -38,10 +38,10 @@ public:
     bool hasBoundingBox;
 
     // Add a polygon to the scene
-    void addPolygon(const Poly& poly);
+    void addPolygon(Poly* poly);
 
     // Get all polygons in the scene
-    const std::vector<Poly>& getPolygons() const;
+    const std::vector<Poly*>* getPolygons() const;
 
     // Get the total number of polygons
     size_t getPolygonCount() const;

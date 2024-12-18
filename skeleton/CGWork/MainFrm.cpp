@@ -5,12 +5,14 @@
 #include "CGWork.h"
 
 #include "MainFrm.h"
+#include "Scene.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame
@@ -132,6 +134,7 @@ void CMainFrame::OnObjectColor()
 
 		// Use the selected color (e.g., store it, apply it, etc.)
 		pApp->Object_color = selectedColor;
+		
 	}
 }
 

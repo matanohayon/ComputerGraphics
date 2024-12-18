@@ -274,8 +274,8 @@ void CCGWorkView::DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& 
 }
 
 
-void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color, bool flagDrawNormal) {
-	const std::vector<Vertex>& vertices = poly.getVertices();
+void CCGWorkView::DrawPolygonEdges(CDC* pDC, Poly* poly, double screenHeight, COLORREF color, bool flagDrawNormal) {
+	const std::vector<Vertex>& vertices = poly->getVertices();
 	const size_t vertexCount = vertices.size();
 	static const double scaleFactor = 13.0;
 
@@ -298,10 +298,10 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 
 
 
-void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color) {
-	if (!poly.hasPolyNormalDefined()) return; 
+void CCGWorkView::DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, COLORREF color) {
+	if (!poly->hasPolyNormalDefined()) return; 
 
-	const PolyNormal& polyNormal = poly.getPolyNormal(); // Use PolyNormal abstraction
+	const PolyNormal& polyNormal = poly->getPolyNormal(); // Use PolyNormal abstraction
 	const Vector4& normalStart = polyNormal.start;
 	const Vector4& normalEnd = polyNormal.end;
 	const Vector4 direction = (normalEnd - normalStart).normalize() * 13.0;
@@ -362,15 +362,15 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 	const double screenHeight = static_cast<double>(r.Height());
 
 	// warning vertex normal
-	if (!m_draw_vertex_normals && !scene.hasVertexNormalsAttribute() && !scene.getPolygons().empty()) {
+	if (!m_draw_vertex_normals && !scene.hasVertexNormalsAttribute() && !scene.getPolygons()->empty()) {
 		AfxMessageBox(_T("The Object does not have vertex normals!"));
 	}
 
-	if (!scene.getPolygons().empty()) {
+	if (!(scene.getPolygons()->empty())) {
 		// Iterate through the polygons in the scene and draw them
-		for (const Poly& poly : scene.getPolygons()) {
-			const std::vector<Vertex>& vertices = poly.getVertices();
-			COLORREF color = poly.getColor(); // Get the color for the polygon
+		for (Poly* poly : *scene.getPolygons()) {
+			const std::vector<Vertex>& vertices = poly->getVertices();
+			COLORREF color = poly->getColor(); // Get the color for the polygon
 			if (m_uniform_color) {
 				color = RGB(255, 255, 255);
 			}
@@ -798,4 +798,12 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 
 	CView::OnLButtonUp(nFlags, point);
+}
+
+
+void CCGWorkView::ApplyXRotation() {
+	Matrix4 tranformation;
+	tranformation.rotateX(30);
+
+
 }

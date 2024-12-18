@@ -171,8 +171,8 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 			return false;
 		}
 
-		Poly poly; // Create a new Poly object for this polygon
-		poly.setColor(polyColor); // Set the color for the polygon
+		Poly *poly= new Poly; // Create a new Poly object for this polygon
+		poly->setColor(polyColor); // Set the color for the polygon
 
 		// Process vertices and calculate centroid
 		Vector4 centroid(0, 0, 0);
@@ -192,7 +192,7 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 				vertex.setNormal(vertex, vertex + vertexNormal); // Add vertex normal with start and end points
 				scene.updateHasVertexNormals(true);
 			}
-			poly.addVertex(vertex); // assign the vertex it to the polygon
+			poly->addVertex(vertex); // assign the vertex it to the polygon
 			PVertex = PVertex->Pnext; //advance the pointer to the next vertex
 		} while (PVertex != PPolygon->PVertex && PVertex != NULL);
 		centroid = centroid / static_cast<double>(vertexCount); // Finalize centroid. if the polygon is convex than the cenroid should be inside.
@@ -201,16 +201,16 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 		// Process polygon normals if they exist in the file
 		if (IP_HAS_PLANE_POLY(PPolygon)) {
 			const Vector4 pn=Vector4(PPolygon->Plane[0], PPolygon->Plane[1], PPolygon->Plane[2]).normalize(); // the normal to the polygon plane
-			poly.setPolyNormal(PolyNormal(centroid, centroid + pn)); // Stores start and end points
+			poly->setPolyNormal(PolyNormal(centroid, centroid + pn)); // Stores start and end points
 		}
 		// calculate polynormal if not exist in the file
 		else if (vertexCount >= 3) {
 			// Calculate polygon normal from the first three vertices
-			const std::vector<Vertex>& vertices = poly.getVertices(); // Correct type
+			const std::vector<Vertex>& vertices = poly->getVertices(); // Correct type
 			const Vector4 edge1 = vertices[1] - vertices[0];
 			const Vector4 edge2 = vertices[2] - vertices[0];
 			const Vector4 calculatedNormal = edge1.cross(edge2).normalize(); //cross the edges to get the normal to the plane
-			poly.setPolyNormal(PolyNormal(centroid, centroid + calculatedNormal)); // Stores start and end points
+			poly->setPolyNormal(PolyNormal(centroid, centroid + calculatedNormal)); // Stores start and end points
 		}
 		else {
 			// Skip polygons with fewer than 3 vertices// these should not exist
