@@ -157,7 +157,7 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 	}
 
 	if (Attrs != NULL) {
-		printf("[OBJECT\n");
+		
 		while (Attrs) {
 			// Handle additional attributes if needed
 			Attrs = AttrTraceAttributes(Attrs, NULL);

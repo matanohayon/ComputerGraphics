@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 #include "Vertex.h"
 
 
-#define MOUSE_FACTOR 3
+#define MOUSE_FACTOR 5
 
 extern Scene scene;
 
@@ -796,7 +796,7 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 		int diffrence = prev_start.x - point.x;
 		prev_start = point;
 		CString str;
-		str.Format(_T("s= %d     %d\n"), diffrence,diffrence/3);
+		str.Format(_T("raw diff= %d    calculated diff %d\n"), diffrence,diffrence/MOUSE_FACTOR);
 		STATUS_BAR_TEXT(str);
 		diffrence = diffrence / MOUSE_FACTOR;
 
@@ -845,6 +845,95 @@ void CCGWorkView::ApplyXRotation(int d) {
 	
 
 }
+
+void CCGWorkView::ApplyYRotation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.rotateY(d);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyZRotation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.rotateZ(d);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyXTranslation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.translate(d,1,1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyYTranslation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.translate(1, d, 1);
+	
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyZTranslation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.translate(1, 1, d);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyXScale(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.scale(d, 1,1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyYScale(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.scale(1, d, 1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyZScale(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.scale(1, 1, d);
+
+	ApplyTransformation(t);
+
+}
+
 
 void CCGWorkView::ApplyTransformation(Matrix4& t)
 {
@@ -900,22 +989,22 @@ void CCGWorkView::MapMouseMovement(int deg)
 	{
 		deg = deg * pApp->r_slider_value;
 		if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
-		//if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
-		//if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+		if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
+		if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
 	}
 	if (m_nAction == ID_ACTION_TRANSLATE)
 	{
 		deg = deg * pApp->t_slider_value;
-		//if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
-		//if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
-		//if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+		if (m_nAxis == ID_AXIS_X) ApplyXTranslation(deg);
+		if (m_nAxis == ID_AXIS_Y)  ApplyYTranslation(deg);
+		if (m_nAxis == ID_AXIS_Z)  ApplyZTranslation(deg);
 	}
 	if (m_nAction == ID_ACTION_SCALE)
 	{
 		deg = deg * pApp->s_slider_value;
-		//if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
-		//if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
-		//if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+		if (m_nAxis == ID_AXIS_X) ApplyXScale(deg);
+		if (m_nAxis == ID_AXIS_Y) ApplyYScale(deg);
+		if (m_nAxis == ID_AXIS_Z) ApplyZScale(deg);
 	}
 }
 

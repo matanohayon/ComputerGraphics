@@ -102,6 +102,18 @@ private:
 	void DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& end, double screenHeight, COLORREF color);
 
 	void ApplyXRotation(int d);
+	void ApplyYRotation(int d);
+	void ApplyZRotation(int d);
+
+	void ApplyXTranslation(int d);
+	void ApplyYTranslation(int d);
+	void ApplyZTranslation(int d);
+
+	void ApplyXScale(int d);
+	void ApplyYScale(int d);
+	void ApplyZScale(int d);
+
+
 	void ApplyTransformation(Matrix4& t);
 	void MapMouseMovement(int deg);
 
