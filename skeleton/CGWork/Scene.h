@@ -34,6 +34,7 @@ private:
 
 public:
     Scene();
+    
 
     bool hasBoundingBox;
 

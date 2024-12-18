@@ -15,8 +15,9 @@ Scene::Scene()
     hasVertexNormals(false),            // Default: no vertex normals
     isFirstDraw(true),
     hasBoundingBox(false),
-    showBoundingBox(false) {
+    showBoundingBox(false){
     polygons = new std::vector<Poly*>;
+
 }           // Default: don't show bounding box
 
 // Add a polygon to the scene

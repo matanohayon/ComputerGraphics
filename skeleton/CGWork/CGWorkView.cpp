@@ -37,6 +37,10 @@ static char THIS_FILE[] = __FILE__;
 /*lets use the global scene container*/
 #include "Scene.h"
 #include "Vertex.h"
+
+
+#define MOUSE_FACTOR 3
+
 extern Scene scene;
 
 
@@ -133,6 +137,7 @@ CCGWorkView::CCGWorkView()
 	m_pDbBitMap = NULL;
 	m_pDbDC = NULL;
 	m_isDragging = false;
+	prev_start=CPoint(0, 0);
 }
 
 CCGWorkView::~CCGWorkView()
@@ -703,9 +708,11 @@ void CCGWorkView::OnOptionsMousesensitivity()
 {
 	// TODO: Add your command handler code here
 	MouseSensitivityDlg dlg;
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 	if (dlg.DoModal() == IDOK)
 	{
+	//	t_slider_value = dlg.TranslationSensitivity;
 
 		// Handle OK click if needed
 	}
@@ -759,9 +766,11 @@ void CCGWorkView::OnLButtonDown(UINT nFlags, CPoint point)
 	m_isDragging = true;
 	SetCapture();  // Capture mouse events globally for this window
 
-	pApp->start = point;
+	//pApp->start = point;
 	// Log or process the starting point
 	TRACE(_T("Mouse Down at: X=%d, Y=%d\n"), point.x, point.y);
+
+	prev_start = point;
 
 	CView::OnLButtonDown(nFlags, point);
 }
@@ -771,12 +780,29 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 	if (m_isDragging)
 	{
 		// Handle dragging logic (e.g., drawing, updating UI, etc.)
-		TRACE(_T("Mouse Move at: X=%d, Y=%d\n"), point.x, point.y);
+		//TRACE(_T("Mouse Move at: X=%d, Y=%d\n"), point.x, point.y);
+		
 
 		// If needed, convert to screen coordinates
 		CPoint screenPoint = point;
 		ClientToScreen(&screenPoint);
-		TRACE(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+		//TRACE(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+
+
+		//CString str;
+		//str.Format(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+		//STATUS_BAR_TEXT(str);
+
+		int diffrence = prev_start.x - point.x;
+		prev_start = point;
+		CString str;
+		str.Format(_T("s= %d     %d\n"), diffrence,diffrence/3);
+		STATUS_BAR_TEXT(str);
+		diffrence = diffrence / MOUSE_FACTOR;
+
+		MapMouseMovement(diffrence);
+		
+
 	}
 
 	CView::OnMouseMove(nFlags, point);
@@ -791,19 +817,106 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 		m_isDragging = false;
 		ReleaseCapture();  // Release mouse capture
 
-		pApp->end = point;
+		//pApp->end = point;
+		//ApplyXRotation();
+		//Invalidate();
 
 		// Log or process the final point
 		TRACE(_T("Mouse Up at: X=%d, Y=%d\n"), point.x, point.y);
+		CString str;
+		str.Format(_T("mouse bn up"));
+		//STATUS_BAR_TEXT(str);
 	}
 
 	CView::OnLButtonUp(nFlags, point);
 }
 
 
-void CCGWorkView::ApplyXRotation() {
-	Matrix4 tranformation;
-	tranformation.rotateX(30);
+void CCGWorkView::ApplyXRotation(int d) {
 
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t=tranformation.rotateX(d);
+	CString str;
+	str.Format(_T("deg = %d, sens = %d"),d, pApp->r_slider_value);
+	STATUS_BAR_TEXT(str);
+	ApplyTransformation(t);
+	
 
 }
+
+void CCGWorkView::ApplyTransformation(Matrix4& t)
+{
+	const BoundingBox& bbox = scene.getBoundingBox();
+	const Vector4& min = bbox.min;
+	const Vector4& max = bbox.max;
+
+	Vector4 center = Vector4(
+		(min.x + max.x) / 2.0,
+		(min.y + max.y) / 2.0,
+		(min.z + max.z) / 2.0,
+		1.0 // Maintain consistent w for homogeneous coordinates
+	);
+	CRect r;
+	GetClientRect(&r);
+
+	double screenWidth = static_cast<double>(r.Width());
+	double screenHeight = static_cast<double>(r.Height());
+	double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+
+	double sceneWidth = max.x - min.x;
+	double sceneHeight = max.y - min.y;
+
+	double targetWidth = screenWidth * (1.0 - marginFactor);
+	double targetHeight = screenHeight * (1.0 - marginFactor);
+
+	double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
+	double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
+
+	double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
+
+
+	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+	Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
+	Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
+
+	// Translate to origin (center the scene)
+	t = t * translateToScreen;
+	// Scale the scene to fit within the target screen area
+	//t = t * scaling;
+	// Translate to the screen center
+	t = t * translateToOrigin;
+
+	scene.applyTransform(t);
+	Invalidate();
+
+}
+
+void CCGWorkView::MapMouseMovement(int deg)
+{
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	if (m_nAction == ID_ACTION_ROTATE)
+	{
+		deg = deg * pApp->r_slider_value;
+		if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
+		//if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
+		//if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+	}
+	if (m_nAction == ID_ACTION_TRANSLATE)
+	{
+		deg = deg * pApp->t_slider_value;
+		//if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
+		//if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
+		//if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+	}
+	if (m_nAction == ID_ACTION_SCALE)
+	{
+		deg = deg * pApp->s_slider_value;
+		//if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
+		//if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
+		//if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+	}
+}
+
+

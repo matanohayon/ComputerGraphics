@@ -36,6 +36,7 @@ private:
 	bool m_draw_vertex_normals;//flag to choose whether to draw vertex normals
 	bool m_draw_bounding_box;
 	bool m_uniform_color;
+	
 
 	int m_nAxis;				// Axis of Action, X Y or Z
 	int m_nAction;				// Rotate, Translate, Scale
@@ -53,6 +54,7 @@ private:
 
 	LightParams m_lights[MAX_LIGHT];	//configurable lights array
 	LightParams m_ambientLight;		//ambient light (only RGB is used)
+	CPoint prev_start;
 
 
 // Overrides
@@ -99,7 +101,10 @@ private:
 	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
 	void DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& end, double screenHeight, COLORREF color);
 
-	void ApplyXRotation();
+	void ApplyXRotation(int d);
+	void ApplyTransformation(Matrix4& t);
+	void MapMouseMovement(int deg);
+
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CCGWorkView)

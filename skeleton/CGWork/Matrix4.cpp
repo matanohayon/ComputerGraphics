@@ -4,6 +4,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#define PI 3.14159265359
+
 // Constructor: Initializes to identity matrix
 Matrix4::Matrix4() {
     for (int i = 0; i < 4; ++i)
@@ -91,7 +93,7 @@ Matrix4 Matrix4::scale(double sx, double sy, double sz) {
 // Rotation matrix around X-axis
 Matrix4 Matrix4::rotateX(double angle) {
     Matrix4 mat;
-    double cosA = cos(angle), sinA = sin(angle);
+    double cosA = cos(mat.DegsToRad(angle)), sinA = sin(mat.DegsToRad(angle));
     mat.m[1][1] = cosA;
     mat.m[1][2] = -sinA;
     mat.m[2][1] = sinA;
@@ -226,4 +228,9 @@ Matrix4 Matrix4::inverse() const {
         }
     }
     return result;
+}
+
+double Matrix4::DegsToRad(double angle)
+{
+    return angle * (PI / 180);
 }
