@@ -3,10 +3,12 @@
 #include <algorithm>
 #include <limits>
 
+float SCALE_FACTOR = 17.0;
+
 // Constructor
 Scene::Scene()
     : sceneTransform(Matrix4()),
-    boundingBox{ Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0), Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0) },
+    boundingBox{ Vector4(FLT_MAX, FLT_MAX, FLT_MAX, 1.0), Vector4(FLT_MIN, FLT_MIN, FLT_MIN, 1.0) },
     wireframeColor(RGB(255, 255, 255)),  // Default white
     normalColor(RGB(0, 255, 0)),        // Default green
     backgroundColor(RGB(0, 0, 0)),      // Default black
@@ -56,8 +58,9 @@ void Scene::applyTransform(const Matrix4& transform) {
                 Vector4 direction = vertex.getNormalEnd() - vertex.getNormalStart();
                 Vector4 transformedDirection = normalTransform.transform(direction).normalize();
 
+
                 // Update the vertex normal with the transformed start and transformed direction
-                vertex.setNormal(transformedStart, transformedStart + transformedDirection);
+                vertex.setNormal(transformedStart, transformedStart + transformedDirection * SCALE_FACTOR);
             }
         }
 
@@ -66,7 +69,8 @@ void Scene::applyTransform(const Matrix4& transform) {
             Vector4 direction = poly.getPolyNormal().end - poly.getPolyNormal().start;
             Vector4 transformedDirection = normalTransform.transform(direction).normalize();
             Vector4 transformedStart = transform.transform(poly.getPolyNormal().start);
-            poly.setPolyNormal(PolyNormal(transformedStart, transformedStart + transformedDirection));
+
+            poly.setPolyNormal(PolyNormal(transformedStart, transformedStart + transformedDirection* SCALE_FACTOR));
         }
     }
 
@@ -89,8 +93,8 @@ void Scene::applyTransformToBoundingBox(const Matrix4& transform) {
         boundingBox.max
     };
 
-    Vector4 newMin(DBL_MAX, DBL_MAX, DBL_MAX, 1);
-    Vector4 newMax(DBL_MIN, DBL_MIN, DBL_MIN, 1);
+    Vector4 newMin(FLT_MAX, FLT_MAX, FLT_MAX, 1);
+    Vector4 newMax(FLT_MIN, FLT_MIN, FLT_MIN, 1);
 
     for (const Vector4& corner : corners) {
         Vector4 transformedCorner = transform.transform(corner);
@@ -115,8 +119,8 @@ void Scene::calculateBoundingBoxFromVertices() {
         boundingBox.max = Vector4(0, 0, 0, 1);
         return;
     }
-    boundingBox.min = Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0);
-    boundingBox.max = Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0);
+    boundingBox.min = Vector4(FLT_MAX, FLT_MAX, FLT_MAX, 1.0);
+    boundingBox.max = Vector4(FLT_MIN, FLT_MIN, FLT_MIN, 1.0);
 
     for (const Poly& poly : polygons) {
         for (const Vertex& vertex : poly.getVertices()) {
@@ -202,6 +206,6 @@ bool Scene::hasVertexNormalsAttribute() const {
 void Scene::clear() {
     polygons.clear();
     sceneTransform = Matrix4(); // Reset to identity matrix
-    boundingBox = { Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0), Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0) };
+    boundingBox = { Vector4(FLT_MAX, FLT_MAX, FLT_MAX, 1.0), Vector4(FLT_MIN, FLT_MIN, FLT_MIN, 1.0) };
     hasVertexNormals = false;
 }

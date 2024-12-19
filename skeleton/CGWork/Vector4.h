@@ -7,31 +7,31 @@
 
 class Vector4 {
 public:
-    double x, y, z,w;
+    float x, y, z,w;
 
     // Constructors
     Vector4();
-    Vector4(double x, double y, double z, double w=1);
+    Vector4(float x, float y, float z, float w=1);
 
     // Vector operations
     Vector4 operator+(const Vector4& v) const;
     Vector4 operator-(const Vector4& v) const;
-    Vector4 operator*(double scalar) const;
-    Vector4 operator/(double scalar) const;
-    double dot(const Vector4& v) const;
+    Vector4 operator*(float scalar) const;
+    Vector4 operator/(float scalar) const;
+    float dot(const Vector4& v) const;
     Vector4 cross(const Vector4& v) const;
-    double magnitude() const;
+    float magnitude() const;
     Vector4 normalize() const;
 
     // Utility functions
-    double distance(const Vector4& v) const;
-    void set(double newX, double newY, double newZ);
+    float distance(const Vector4& v) const;
+    void set(float newX, float newY, float newZ);
     void updateMin(const Vector4& v);
     void updateMax(const Vector4& v);
     static Vector4 zero();
 
     // Angle between vectors
-    double angle(const Vector4& v) const;
+    float angle(const Vector4& v) const;
 
     // Equality and inequality
     bool operator==(const Vector4& v) const;

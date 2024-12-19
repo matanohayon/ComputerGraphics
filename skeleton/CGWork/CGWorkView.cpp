@@ -288,10 +288,7 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 		
 		// Draw vertex normal
 		if (start.getHasNormal() && flagDrawNormal) {
-			const Vector4 direction = (start.getNormalEnd() - start.getNormalStart()).normalize() * scaleFactor;
-			const Vector4 scaledEnd = start.getNormalStart() + direction;
-
-			DrawLineHelper(pDC, start.getNormalStart(), scaledEnd, screenHeight, RGB(255, 127, 80));
+			DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(255, 127, 80));
 		}
 	}
 }
@@ -300,15 +297,9 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 
 void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color) {
 	if (!poly.hasPolyNormalDefined()) return; 
-
 	const PolyNormal& polyNormal = poly.getPolyNormal(); // Use PolyNormal abstraction
-	const Vector4& normalStart = polyNormal.start;
-	const Vector4& normalEnd = polyNormal.end;
-	const Vector4 direction = (normalEnd - normalStart).normalize() * 13.0;
-	const Vector4 scaledEnd = normalStart + direction;
-
 	// Draw the polygon normal using the helper function
-	DrawLineHelper(pDC, normalStart, scaledEnd, screenHeight, color);
+	DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, color);
 }
 
 

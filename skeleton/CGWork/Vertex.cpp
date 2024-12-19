@@ -4,7 +4,7 @@
 Vertex::Vertex() : Vector4(), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false) {}
 
 // Constructor with position
-Vertex::Vertex(double x, double y, double z, double w)
+Vertex::Vertex(float x, float y, float z, float w)
     : Vector4(x, y, z, w), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false) {}
 
 Vertex& Vertex::operator=(const Vector4& v) {

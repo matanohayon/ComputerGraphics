@@ -58,8 +58,8 @@ COLORREF Poly::getColor() const {
 
 
 void Poly::calculateBoundingBox(Vector4& min, Vector4& max) const {
-    min = Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0);
-    max = Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0);
+    min = Vector4(FLT_MAX, FLT_MAX, FLT_MAX, 1.0);
+    max = Vector4(FLT_MIN, FLT_MIN, FLT_MIN, 1.0);
 
     for (const Vertex& vertex : vertices) {
         min.updateMin(vertex);

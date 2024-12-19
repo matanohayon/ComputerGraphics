@@ -12,7 +12,7 @@ private:
 public:
     // Constructors
     Vertex(); // Default constructor
-    Vertex(double x, double y, double z, double w = 1.0); // Constructor with position
+    Vertex(float x, float y, float z, float w = 1.0); // Constructor with position
     Vertex(const Vector4& position, const Vector4& normal); // Constructor with position and normal
     Vertex(const Vector4& position, const Vector4& start, const Vector4& end); // Full constructor
 
