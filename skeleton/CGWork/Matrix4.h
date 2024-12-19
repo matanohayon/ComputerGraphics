@@ -42,6 +42,8 @@ public:
     Matrix4 inverse() const;
     // Print the matrix (for debugging)
     void print() const;
+    double DegsToRad(double angle);
+
 };
 
 #endif // MATRIX4_H

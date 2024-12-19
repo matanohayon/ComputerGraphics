@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#define PI 3.14159265359
 
 // Constructor: Initializes to identity matrix
 Matrix4::Matrix4() {
@@ -213,4 +214,9 @@ Matrix4 Matrix4::inverse() const {
     }
 
     return result;
+
+}
+double Matrix4::DegsToRad(double angle)
+{
+    return angle * (PI / 180);
 }

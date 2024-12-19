@@ -37,6 +37,10 @@ static char THIS_FILE[] = __FILE__;
 /*lets use the global scene container*/
 #include "Scene.h"
 #include "Vertex.h"
+
+
+#define MOUSE_FACTOR 5
+
 extern Scene scene;
 
 
@@ -98,10 +102,10 @@ END_MESSAGE_MAP()
 
 // A patch to fix GLaux disappearance from VS2005 to VS2008
 void auxSolidCone(GLdouble radius, GLdouble height) {
-        GLUquadric *quad = gluNewQuadric();
-        gluQuadricDrawStyle(quad, GLU_FILL);
-        gluCylinder(quad, radius, 0.0, height, 20, 20);
-        gluDeleteQuadric(quad);
+	GLUquadric* quad = gluNewQuadric();
+	gluQuadricDrawStyle(quad, GLU_FILL);
+	gluCylinder(quad, radius, 0.0, height, 20, 20);
+	gluDeleteQuadric(quad);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -117,7 +121,7 @@ CCGWorkView::CCGWorkView()
 	// Set default values
 	m_nAxis = ID_AXIS_X;
 	m_nAction = ID_ACTION_ROTATE;
-	m_nView = ID_VIEW_ORTHOGRAPHIC;	
+	m_nView = ID_VIEW_ORTHOGRAPHIC;
 
 	m_bIsPerspective = false;
 
@@ -129,10 +133,11 @@ CCGWorkView::CCGWorkView()
 	m_nMaterialCosineFactor = 32;
 
 	//init the first light to be enabled
-	m_lights[LIGHT_ID_1].enabled=true;
+	m_lights[LIGHT_ID_1].enabled = true;
 	m_pDbBitMap = NULL;
 	m_pDbDC = NULL;
 	m_isDragging = false;
+	prev_start = CPoint(0, 0);
 }
 
 CCGWorkView::~CCGWorkView()
@@ -181,7 +186,7 @@ BOOL CCGWorkView::PreCreateWindow(CREATESTRUCT& cs)
 
 
 
-int CCGWorkView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CCGWorkView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CView::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -196,8 +201,8 @@ int CCGWorkView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 BOOL CCGWorkView::InitializeCGWork()
 {
 	m_pDC = new CClientDC(this);
-	
-	if ( NULL == m_pDC ) { // failure to get DC
+
+	if (NULL == m_pDC) { // failure to get DC
 		::AfxMessageBox(CString("Couldn't get a valid DC."));
 		return FALSE;
 	}
@@ -207,7 +212,7 @@ BOOL CCGWorkView::InitializeCGWork()
 	m_pDbDC = new CDC();
 	m_pDbDC->CreateCompatibleDC(m_pDC);
 	SetTimer(1, 1, NULL);
-	m_pDbBitMap = CreateCompatibleBitmap(m_pDC->m_hDC, r.right, r.bottom);	
+	m_pDbBitMap = CreateCompatibleBitmap(m_pDC->m_hDC, r.right, r.bottom);
 	m_pDbDC->SelectObject(m_pDbBitMap);
 	return TRUE;
 }
@@ -217,11 +222,11 @@ BOOL CCGWorkView::InitializeCGWork()
 // CCGWorkView message handlers
 
 
-void CCGWorkView::OnSize(UINT nType, int cx, int cy) 
+void CCGWorkView::OnSize(UINT nType, int cx, int cy)
 {
 	CView::OnSize(nType, cx, cy);
 
-	if ( 0 >= cx || 0 >= cy ) {
+	if (0 >= cx || 0 >= cy) {
 		return;
 	}
 
@@ -231,19 +236,19 @@ void CCGWorkView::OnSize(UINT nType, int cx, int cy)
 
 	// compute the aspect ratio
 	// this will keep all dimension scales equal
-	m_AspectRatio = (GLdouble)m_WindowWidth/(GLdouble)m_WindowHeight;
+	m_AspectRatio = (GLdouble)m_WindowWidth / (GLdouble)m_WindowHeight;
 
 	CRect r;
 	GetClientRect(&r);
 	DeleteObject(m_pDbBitMap);
-    	m_pDbBitMap = CreateCompatibleBitmap(m_pDC->m_hDC, r.right, r.bottom);	
+	m_pDbBitMap = CreateCompatibleBitmap(m_pDC->m_hDC, r.right, r.bottom);
 	m_pDbDC->SelectObject(m_pDbBitMap);
 }
 
 
 BOOL CCGWorkView::SetupViewingFrustum(void)
 {
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -256,7 +261,7 @@ BOOL CCGWorkView::SetupViewingOrthoConstAspect(void)
 
 
 
-BOOL CCGWorkView::OnEraseBkgnd(CDC* pDC) 
+BOOL CCGWorkView::OnEraseBkgnd(CDC* pDC)
 {
 	// Windows will clear the window with the background color every time your window 
 	// is redrawn, and then CGWork will clear the viewport with its own background color.
@@ -274,10 +279,10 @@ void CCGWorkView::DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& 
 }
 
 
-void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color, bool flagDrawNormal) {
-	const std::vector<Vertex>& vertices = poly.getVertices();
+void CCGWorkView::DrawPolygonEdges(CDC* pDC, Poly* poly, double screenHeight, COLORREF color, bool flagDrawNormal) {
+	const std::vector<Vertex>& vertices = poly->getVertices();
 	const size_t vertexCount = vertices.size();
-	static const double scaleFactor = 13.0;
+
 
 	for (size_t i = 0; i < vertexCount; ++i) {
 		const Vertex& start = vertices[i];
@@ -285,9 +290,10 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 
 		// Draw polygon edge
 		DrawLineHelper(pDC, start, end, screenHeight, color);
-		
+
 		// Draw vertex normal
 		if (start.getHasNormal() && flagDrawNormal) {
+
 			DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(255, 127, 80));
 		}
 	}
@@ -295,9 +301,12 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, const Poly& poly, double screenHeig
 
 
 
-void CCGWorkView::DrawPolygonNormal(CDC* pDC, const Poly& poly, double screenHeight, COLORREF color) {
-	if (!poly.hasPolyNormalDefined()) return; 
-	const PolyNormal& polyNormal = poly.getPolyNormal(); // Use PolyNormal abstraction
+void CCGWorkView::DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, COLORREF color) {
+	if (!poly->hasPolyNormalDefined()) return;
+
+	const PolyNormal& polyNormal = poly->getPolyNormal(); // Use PolyNormal abstraction
+
+
 	// Draw the polygon normal using the helper function
 	DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, color);
 }
@@ -353,15 +362,15 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 	const double screenHeight = static_cast<double>(r.Height());
 
 	// warning vertex normal
-	if (!m_draw_vertex_normals && !scene.hasVertexNormalsAttribute() && !scene.getPolygons().empty()) {
+	if (!m_draw_vertex_normals && !scene.hasVertexNormalsAttribute() && !scene.getPolygons()->empty()) {
 		AfxMessageBox(_T("The Object does not have vertex normals!"));
 	}
 
-	if (!scene.getPolygons().empty()) {
+	if (!(scene.getPolygons()->empty())) {
 		// Iterate through the polygons in the scene and draw them
-		for (const Poly& poly : scene.getPolygons()) {
-			const std::vector<Vertex>& vertices = poly.getVertices();
-			COLORREF color = poly.getColor(); // Get the color for the polygon
+		for (Poly* poly : *scene.getPolygons()) {
+			const std::vector<Vertex>& vertices = poly->getVertices();
+			COLORREF color = poly->getColor(); // Get the color for the polygon
 			if (m_uniform_color) {
 				color = RGB(255, 255, 255);
 			}
@@ -388,31 +397,31 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 
 
 
-	/////////////////////////////////////////////////////////////////////////////
-	// User Defined Functions
+/////////////////////////////////////////////////////////////////////////////
+// User Defined Functions
 
-	void CCGWorkView::RenderScene() {
-		// do nothing. This is supposed to be overriden...
-		return;
+void CCGWorkView::RenderScene() {
+	// do nothing. This is supposed to be overriden...
+	return;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CCGWorkView CGWork Finishing and clearing...
+
+void CCGWorkView::OnDestroy()
+{
+	CView::OnDestroy();
+
+	// delete the DC
+	if (m_pDC) {
+		delete m_pDC;
 	}
 
-
-	/////////////////////////////////////////////////////////////////////////////
-	// CCGWorkView CGWork Finishing and clearing...
-
-	void CCGWorkView::OnDestroy()
-	{
-		CView::OnDestroy();
-
-		// delete the DC
-		if (m_pDC) {
-			delete m_pDC;
-		}
-
-		if (m_pDbDC) {
-			delete m_pDbDC;
-		}
+	if (m_pDbDC) {
+		delete m_pDbDC;
 	}
+}
 
 
 
@@ -422,70 +431,70 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 
 
 
-	void CCGWorkView::OnFileLoad() {
-		TCHAR szFilters[] = _T("IRIT Data Files (*.itd)|*.itd|All Files (*.*)|*.*||");
+void CCGWorkView::OnFileLoad() {
+	TCHAR szFilters[] = _T("IRIT Data Files (*.itd)|*.itd|All Files (*.*)|*.*||");
 
-		CFileDialog dlg(TRUE, _T("itd"), _T("*.itd"), OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, szFilters);
+	CFileDialog dlg(TRUE, _T("itd"), _T("*.itd"), OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, szFilters);
 
-		if (dlg.DoModal() == IDOK) {
-			m_strItdFileName = dlg.GetPathName(); // Full path and filename
-			scene.clear(); // Clear the existing scene data
-			//scene.hasBoundingBox = true;
+	if (dlg.DoModal() == IDOK) {
+		m_strItdFileName = dlg.GetPathName(); // Full path and filename
+		scene.clear(); // Clear the existing scene data
+		//scene.hasBoundingBox = true;
 
-			// Load and process the IRIT file
-			CGSkelProcessIritDataFiles(m_strItdFileName, 1);
+		// Load and process the IRIT file
+		CGSkelProcessIritDataFiles(m_strItdFileName, 1);
 
-			// Calculate bounding box and determine initial transformation
-			scene.calculateBoundingBox();
+		// Calculate bounding box and determine initial transformation
+		scene.calculateBoundingBox();
 
-			const BoundingBox& bbox = scene.getBoundingBox();
-			const Vector4& min = bbox.min;
-			const Vector4& max = bbox.max;
+		const BoundingBox& bbox = scene.getBoundingBox();
+		const Vector4& min = bbox.min;
+		const Vector4& max = bbox.max;
 
-			Vector4 center = Vector4(
-				(min.x + max.x) / 2.0,
-				(min.y + max.y) / 2.0,
-				(min.z + max.z) / 2.0,
-				1.0 // Maintain consistent w for homogeneous coordinates
-			);
-			CRect r;
-			GetClientRect(&r);
+		Vector4 center = Vector4(
+			(min.x + max.x) / 2.0,
+			(min.y + max.y) / 2.0,
+			(min.z + max.z) / 2.0,
+			1.0 // Maintain consistent w for homogeneous coordinates
+		);
+		CRect r;
+		GetClientRect(&r);
 
-			double screenWidth = static_cast<double>(r.Width());
-			double screenHeight = static_cast<double>(r.Height());
-			double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+		double screenWidth = static_cast<double>(r.Width());
+		double screenHeight = static_cast<double>(r.Height());
+		double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
 
-			double sceneWidth = max.x - min.x;
-			double sceneHeight = max.y - min.y;
+		double sceneWidth = max.x - min.x;
+		double sceneHeight = max.y - min.y;
 
-			double targetWidth = screenWidth * (1.0 - marginFactor);
-			double targetHeight = screenHeight * (1.0 - marginFactor);
+		double targetWidth = screenWidth * (1.0 - marginFactor);
+		double targetHeight = screenHeight * (1.0 - marginFactor);
 
-			double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
-			double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
+		double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
+		double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
 
-			double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
+		double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
 
-			Matrix4 t; // Starts as the identity matrix
+		Matrix4 t; // Starts as the identity matrix
 
-			Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
-			Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
-			Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
+		Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+		Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
+		Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
 
-			// Translate to origin (center the scene)
-			t = t * translateToScreen;
-			// Scale the scene to fit within the target screen area
-			t = t * scaling;
-			// Translate to the screen center
-			t = t * translateToOrigin;
+		// Translate to origin (center the scene)
+		t = t * translateToScreen;
+		// Scale the scene to fit within the target screen area
+		t = t * scaling;
+		// Translate to the screen center
+		t = t * translateToOrigin;
 
-			scene.applyTransform(t);
+		scene.applyTransform(t);
 
-			scene.updateIsFirstDraw(false);
+		scene.updateIsFirstDraw(false);
 
-			Invalidate(); // Trigger WM_PAINT for redraw
-		}
+		Invalidate(); // Trigger WM_PAINT for redraw
 	}
+}
 
 
 
@@ -497,26 +506,26 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 // Note: that all the following Message Handlers act in a similar way.
 // Each control or command has two functions associated with it.
 
-void CCGWorkView::OnViewOrthographic() 
+void CCGWorkView::OnViewOrthographic()
 {
 	m_nView = ID_VIEW_ORTHOGRAPHIC;
 	m_bIsPerspective = false;
 	Invalidate();		// redraw using the new view.
 }
 
-void CCGWorkView::OnUpdateViewOrthographic(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateViewOrthographic(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nView == ID_VIEW_ORTHOGRAPHIC);
 }
 
-void CCGWorkView::OnViewPerspective() 
+void CCGWorkView::OnViewPerspective()
 {
 	m_nView = ID_VIEW_PERSPECTIVE;
 	m_bIsPerspective = true;
 	Invalidate();
 }
 
-void CCGWorkView::OnUpdateViewPerspective(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateViewPerspective(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nView == ID_VIEW_PERSPECTIVE);
 }
@@ -526,32 +535,32 @@ void CCGWorkView::OnUpdateViewPerspective(CCmdUI* pCmdUI)
 
 // ACTION HANDLERS ///////////////////////////////////////////
 
-void CCGWorkView::OnActionRotate() 
+void CCGWorkView::OnActionRotate()
 {
 	m_nAction = ID_ACTION_ROTATE;
 }
 
-void CCGWorkView::OnUpdateActionRotate(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateActionRotate(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nAction == ID_ACTION_ROTATE);
 }
 
-void CCGWorkView::OnActionTranslate() 
+void CCGWorkView::OnActionTranslate()
 {
 	m_nAction = ID_ACTION_TRANSLATE;
 }
 
-void CCGWorkView::OnUpdateActionTranslate(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateActionTranslate(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nAction == ID_ACTION_TRANSLATE);
 }
 
-void CCGWorkView::OnActionScale() 
+void CCGWorkView::OnActionScale()
 {
 	m_nAction = ID_ACTION_SCALE;
 }
 
-void CCGWorkView::OnUpdateActionScale(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateActionScale(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nAction == ID_ACTION_SCALE);
 }
@@ -565,7 +574,7 @@ void CCGWorkView::OnUpdateActionScale(CCmdUI* pCmdUI)
 // Gets calles when the X button is pressed or when the Axis->X menu is selected.
 // The only thing we do here is set the ChildView member variable m_nAxis to the 
 // selected axis.
-void CCGWorkView::OnAxisX() 
+void CCGWorkView::OnAxisX()
 {
 	m_nAxis = ID_AXIS_X;
 }
@@ -574,29 +583,29 @@ void CCGWorkView::OnAxisX()
 // The control is responsible for its redrawing.
 // It sets itself disabled when the action is a Scale action.
 // It sets itself Checked if the current axis is the X axis.
-void CCGWorkView::OnUpdateAxisX(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateAxisX(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nAxis == ID_AXIS_X);
 }
 
 
-void CCGWorkView::OnAxisY() 
+void CCGWorkView::OnAxisY()
 {
 	m_nAxis = ID_AXIS_Y;
 }
 
-void CCGWorkView::OnUpdateAxisY(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateAxisY(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nAxis == ID_AXIS_Y);
 }
 
 
-void CCGWorkView::OnAxisZ() 
+void CCGWorkView::OnAxisZ()
 {
 	m_nAxis = ID_AXIS_Z;
 }
 
-void CCGWorkView::OnUpdateAxisZ(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateAxisZ(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nAxis == ID_AXIS_Z);
 }
@@ -612,47 +621,47 @@ void CCGWorkView::OnUpdateAxisZ(CCmdUI* pCmdUI)
 
 // LIGHT SHADING HANDLERS ///////////////////////////////////////////
 
-void CCGWorkView::OnLightShadingFlat() 
+void CCGWorkView::OnLightShadingFlat()
 {
 	m_nLightShading = ID_LIGHT_SHADING_FLAT;
 }
 
-void CCGWorkView::OnUpdateLightShadingFlat(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateLightShadingFlat(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nLightShading == ID_LIGHT_SHADING_FLAT);
 }
 
 
-void CCGWorkView::OnLightShadingGouraud() 
+void CCGWorkView::OnLightShadingGouraud()
 {
 	m_nLightShading = ID_LIGHT_SHADING_GOURAUD;
 }
 
-void CCGWorkView::OnUpdateLightShadingGouraud(CCmdUI* pCmdUI) 
+void CCGWorkView::OnUpdateLightShadingGouraud(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_nLightShading == ID_LIGHT_SHADING_GOURAUD);
 }
 
 // LIGHT SETUP HANDLER ///////////////////////////////////////////
 
-void CCGWorkView::OnLightConstants() 
+void CCGWorkView::OnLightConstants()
 {
 	CLightDialog dlg;
 
-	for (int id=LIGHT_ID_1;id<MAX_LIGHT;id++)
-	{	    
-	    dlg.SetDialogData((LightID)id,m_lights[id]);
-	}
-	dlg.SetDialogData(LIGHT_ID_AMBIENT,m_ambientLight);
-
-	if (dlg.DoModal() == IDOK) 
+	for (int id = LIGHT_ID_1; id < MAX_LIGHT; id++)
 	{
-	    for (int id=LIGHT_ID_1;id<MAX_LIGHT;id++)
-	    {
-		m_lights[id] = dlg.GetDialogData((LightID)id);
-	    }
-	    m_ambientLight = dlg.GetDialogData(LIGHT_ID_AMBIENT);
-	}	
+		dlg.SetDialogData((LightID)id, m_lights[id]);
+	}
+	dlg.SetDialogData(LIGHT_ID_AMBIENT, m_ambientLight);
+
+	if (dlg.DoModal() == IDOK)
+	{
+		for (int id = LIGHT_ID_1; id < MAX_LIGHT; id++)
+		{
+			m_lights[id] = dlg.GetDialogData((LightID)id);
+		}
+		m_ambientLight = dlg.GetDialogData(LIGHT_ID_AMBIENT);
+	}
 	Invalidate();
 }
 
@@ -694,11 +703,13 @@ void CCGWorkView::OnOptionsMousesensitivity()
 {
 	// TODO: Add your command handler code here
 	MouseSensitivityDlg dlg;
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 	if (dlg.DoModal() == IDOK)
 	{
+		//	t_slider_value = dlg.TranslationSensitivity;
 
-		// Handle OK click if needed
+			// Handle OK click if needed
 	}
 }
 
@@ -750,9 +761,11 @@ void CCGWorkView::OnLButtonDown(UINT nFlags, CPoint point)
 	m_isDragging = true;
 	SetCapture();  // Capture mouse events globally for this window
 
-	pApp->start = point;
+	//pApp->start = point;
 	// Log or process the starting point
 	TRACE(_T("Mouse Down at: X=%d, Y=%d\n"), point.x, point.y);
+
+	prev_start = point;
 
 	CView::OnLButtonDown(nFlags, point);
 }
@@ -762,12 +775,29 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 	if (m_isDragging)
 	{
 		// Handle dragging logic (e.g., drawing, updating UI, etc.)
-		TRACE(_T("Mouse Move at: X=%d, Y=%d\n"), point.x, point.y);
+		//TRACE(_T("Mouse Move at: X=%d, Y=%d\n"), point.x, point.y);
+
 
 		// If needed, convert to screen coordinates
 		CPoint screenPoint = point;
 		ClientToScreen(&screenPoint);
-		TRACE(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+		//TRACE(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+
+
+		//CString str;
+		//str.Format(_T("Mouse Move (Screen): X=%d, Y=%d\n"), screenPoint.x, screenPoint.y);
+		//STATUS_BAR_TEXT(str);
+
+		int diffrence = prev_start.x - point.x;
+		prev_start = point;
+		CString str;
+		str.Format(_T("raw diff= %d    calculated diff %d\n"), diffrence, diffrence / MOUSE_FACTOR);
+		STATUS_BAR_TEXT(str);
+		diffrence = diffrence / MOUSE_FACTOR;
+
+		MapMouseMovement(diffrence);
+
+
 	}
 
 	CView::OnMouseMove(nFlags, point);
@@ -782,11 +812,194 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 		m_isDragging = false;
 		ReleaseCapture();  // Release mouse capture
 
-		pApp->end = point;
+		//pApp->end = point;
+		//ApplyXRotation();
+		//Invalidate();
 
 		// Log or process the final point
 		TRACE(_T("Mouse Up at: X=%d, Y=%d\n"), point.x, point.y);
+		CString str;
+		str.Format(_T("mouse bn up"));
+		//STATUS_BAR_TEXT(str);
 	}
 
 	CView::OnLButtonUp(nFlags, point);
 }
+
+
+void CCGWorkView::ApplyXRotation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.rotateX(d);
+	CString str;
+	str.Format(_T("deg = %d, sens = %d"), d, pApp->r_slider_value);
+	STATUS_BAR_TEXT(str);
+	ApplyTransformation(t);
+
+
+}
+
+void CCGWorkView::ApplyYRotation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.rotateY(d);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyZRotation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.rotateZ(d);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyXTranslation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.translate(d, 1, 1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyYTranslation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.translate(1, d, 1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyZTranslation(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.translate(1, 1, d);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyXScale(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.scale(d, 1, 1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyYScale(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.scale(1, d, 1);
+
+	ApplyTransformation(t);
+
+}
+
+void CCGWorkView::ApplyZScale(int d) {
+
+
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	Matrix4 tranformation;
+	Matrix4 t = tranformation.scale(1, 1, d);
+
+	ApplyTransformation(t);
+
+}
+
+
+void CCGWorkView::ApplyTransformation(Matrix4& t)
+{
+	const BoundingBox& bbox = scene.getBoundingBox();
+	const Vector4& min = bbox.min;
+	const Vector4& max = bbox.max;
+
+	Vector4 center = Vector4(
+		(min.x + max.x) / 2.0,
+		(min.y + max.y) / 2.0,
+		(min.z + max.z) / 2.0,
+		1.0 // Maintain consistent w for homogeneous coordinates
+	);
+	CRect r;
+	GetClientRect(&r);
+
+	double screenWidth = static_cast<double>(r.Width());
+	double screenHeight = static_cast<double>(r.Height());
+	double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+
+	double sceneWidth = max.x - min.x;
+	double sceneHeight = max.y - min.y;
+
+	double targetWidth = screenWidth * (1.0 - marginFactor);
+	double targetHeight = screenHeight * (1.0 - marginFactor);
+
+	double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
+	double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
+
+	double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
+
+
+	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+	Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
+	Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
+
+	// Translate to origin (center the scene)
+	t = t * translateToScreen;
+	// Scale the scene to fit within the target screen area
+	//t = t * scaling;
+	// Translate to the screen center
+	t = t * translateToOrigin;
+
+	scene.applyTransform(t);
+	Invalidate();
+
+}
+
+void CCGWorkView::MapMouseMovement(int deg)
+{
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	if (m_nAction == ID_ACTION_ROTATE)
+	{
+		deg = deg * pApp->r_slider_value;
+		if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
+		if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
+		if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+	}
+	if (m_nAction == ID_ACTION_TRANSLATE)
+	{
+		deg = deg * pApp->t_slider_value;
+		if (m_nAxis == ID_AXIS_X) ApplyXTranslation(deg);
+		if (m_nAxis == ID_AXIS_Y)  ApplyYTranslation(deg);
+		if (m_nAxis == ID_AXIS_Z)  ApplyZTranslation(deg);
+	}
+	if (m_nAction == ID_ACTION_SCALE)
+	{
+		deg = deg * pApp->s_slider_value;
+		if (m_nAxis == ID_AXIS_X) ApplyXScale(deg);
+		if (m_nAxis == ID_AXIS_Y) ApplyYScale(deg);
+		if (m_nAxis == ID_AXIS_Z) ApplyZScale(deg);
+	}
+}
+
