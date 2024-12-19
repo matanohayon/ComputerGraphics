@@ -175,7 +175,7 @@ bool CGSkelStoreData(IPObjectStruct* PObj) {
 		poly->setColor(polyColor); // Set the color for the polygon
 
 		// Process vertices and calculate centroid
-		Vector4 centroid(0, 0, 0);
+		Vector4 centroid(0, 0, 0,0);
 		int vertexCount = 0;
 
 		PVertex = PPolygon->PVertex;

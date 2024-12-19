@@ -57,7 +57,7 @@ void Scene::applyTransform(const Matrix4& transform) {
 
                 // Transform the normal direction using the inverse-transpose matrix
                 Vector4 direction = vertex.getNormalEnd() - vertex.getNormalStart();
-                Vector4 transformedDirection = normalTransform.transform(direction).normalize();
+                Vector4 transformedDirection = normalTransform.transform(direction).normalize()*16.0;
 
                 // Update the vertex normal with the transformed start and transformed direction
                 vertex.setNormal(transformedStart, transformedStart + transformedDirection);
@@ -67,12 +67,12 @@ void Scene::applyTransform(const Matrix4& transform) {
         // Apply the transformation to polygon normals
         if (poly->hasPolyNormalDefined()) {
             Vector4 direction = poly->getPolyNormal().end - poly->getPolyNormal().start;
-            Vector4 transformedDirection = normalTransform.transform(direction).normalize();
+            Vector4 transformedDirection = normalTransform.transform(direction).normalize()*16.0;
             Vector4 transformedStart = transform.transform(poly->getPolyNormal().start);
             poly->setPolyNormal(PolyNormal(transformedStart, transformedStart + transformedDirection));
         }
     }
-
+    //calculateBoundingBox();
     // Apply the transformation to the bounding box
     applyTransformToBoundingBox(transform); // Use the full transformation for the bounding box
 
