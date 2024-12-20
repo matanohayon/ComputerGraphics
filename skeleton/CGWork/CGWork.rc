@@ -73,7 +73,6 @@ BEGIN
         MENUITEM "&Load",                       ID_FILE_LOAD
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
-    MENUITEM SEPARATOR
     POPUP "&View"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
@@ -83,10 +82,10 @@ BEGIN
         MENUITEM "&Perspective",                ID_VIEW_PERSPECTIVE
         MENUITEM SEPARATOR
         MENUITEM "Bounding Box",                ID_VIEW_BOUNDINGBOX
-        MENUITEM "Vertex Normals",              ID_VIEW_VERTEXNORMAL
-        MENUITEM "Polygon Normals",             ID_VIEW_POLYGONNORMALS
+        MENUITEM SEPARATOR
         MENUITEM "Polygon Normals from *itd file", ID_VIEW_POLYGONNORMALSFROM
         MENUITEM "Polygon Normals NOT from *itd file", ID_VIEW_POLYGONNORMALSNOTFROM
+        MENUITEM SEPARATOR
         MENUITEM "Vertex Normals from *itd file", ID_VIEW_VERTEXNORMALSFROM
         MENUITEM "Vertex Normals NOT from *itd file", ID_VIEW_VERTEXNORMALSNOTFROM
     END

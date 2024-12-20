@@ -248,29 +248,35 @@ BOOL CCGWorkView::InitializeCGWork()
 /////////////////////////////////////////////////////////////////////////////
 // CCGWorkView message handlers
 
-
 void CCGWorkView::OnSize(UINT nType, int cx, int cy)
 {
 	CView::OnSize(nType, cx, cy);
 
 	if (0 >= cx || 0 >= cy) {
-		return;
+		return; // Prevent resizing to zero or negative dimensions
 	}
 
-	// save the width and height of the current window
+	// Save the width and height of the current window
 	m_WindowWidth = cx;
 	m_WindowHeight = cy;
 
-	// compute the aspect ratio
-	// this will keep all dimension scales equal
+	// Compute the aspect ratio
 	m_AspectRatio = (GLdouble)m_WindowWidth / (GLdouble)m_WindowHeight;
 
 	CRect r;
 	GetClientRect(&r);
-	DeleteObject(m_pDbBitMap);
-	m_pDbBitMap = CreateCompatibleBitmap(m_pDC->m_hDC, r.right, r.bottom);
-	m_pDbDC->SelectObject(m_pDbBitMap);
+	DeleteObject(m_pDbBitMap); // Delete the old bitmap
+	m_pDbBitMap = CreateCompatibleBitmap(m_pDC->m_hDC, r.right, r.bottom); // Create a new bitmap
+	m_pDbDC->SelectObject(m_pDbBitMap); // Attach the new bitmap to the device context
+
+	// Apply the transformation to center the object to the screen
+	Matrix4 centerMatrix = getMatrixToCenterObject();
+	scene.applyTransform(centerMatrix);
+
+	// Trigger a redraw
+	Invalidate();
 }
+
 
 
 BOOL CCGWorkView::SetupViewingFrustum(void)
@@ -464,7 +470,52 @@ void CCGWorkView::OnDestroy()
 
 
 
+Matrix4 CCGWorkView::getMatrixToCenterObject() {
+	// Calculate bounding box and determine initial transformation
+	scene.calculateBoundingBox();
 
+	const BoundingBox& bbox = scene.getBoundingBox();
+	const Vector4& min = bbox.min;
+	const Vector4& max = bbox.max;
+
+	const Vector4 center = Vector4(
+		(min.x + max.x) / 2.0,
+		(min.y + max.y) / 2.0,
+		(min.z + max.z) / 2.0,
+		1.0 // Maintain consistent w for homogeneous coordinates
+	);
+	CRect r;
+	GetClientRect(&r);
+
+	const double screenWidth = static_cast<double>(r.Width());
+	const double screenHeight = static_cast<double>(r.Height());
+	const double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+
+	const double sceneWidth = max.x - min.x;
+	const double sceneHeight = max.y - min.y;
+
+	const double targetWidth = screenWidth * (1.0 - marginFactor);
+	const double targetHeight = screenHeight * (1.0 - marginFactor);
+
+	const double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
+	const double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
+
+	const double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
+
+	Matrix4 t; // Starts as the identity matrix
+
+	const Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+	const Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
+	const Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
+
+	// Translate to origin (center the scene)
+	t = t * translateToScreen;
+	// Scale the scene to fit within the target screen area
+	t = t * scaling;
+	// Translate to the screen center
+	t = t * translateToOrigin;
+	return t;
+}
 
 
 
@@ -482,48 +533,7 @@ void CCGWorkView::OnFileLoad() {
 		CGSkelProcessIritDataFiles(m_strItdFileName, 1);
 
 		// Calculate bounding box and determine initial transformation
-		scene.calculateBoundingBox();
-
-		const BoundingBox& bbox = scene.getBoundingBox();
-		const Vector4& min = bbox.min;
-		const Vector4& max = bbox.max;
-
-		const Vector4 center = Vector4(
-			(min.x + max.x) / 2.0,
-			(min.y + max.y) / 2.0,
-			(min.z + max.z) / 2.0,
-			1.0 // Maintain consistent w for homogeneous coordinates
-		);
-		CRect r;
-		GetClientRect(&r);
-
-		const double screenWidth = static_cast<double>(r.Width());
-		const double screenHeight = static_cast<double>(r.Height());
-		const double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
-
-		const double sceneWidth = max.x - min.x;
-		const double sceneHeight = max.y - min.y;
-
-		const double targetWidth = screenWidth * (1.0 - marginFactor);
-		const double targetHeight = screenHeight * (1.0 - marginFactor);
-
-		const double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
-		const double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
-
-		const double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
-
-		Matrix4 t; // Starts as the identity matrix
-
-		const Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
-		const Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
-		const Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
-
-		// Translate to origin (center the scene)
-		t = t * translateToScreen;
-		// Scale the scene to fit within the target screen area
-		t = t * scaling;
-		// Translate to the screen center
-		t = t * translateToOrigin;
+		Matrix4 t = getMatrixToCenterObject();
 
 		scene.calculateVertexNormals();
 
