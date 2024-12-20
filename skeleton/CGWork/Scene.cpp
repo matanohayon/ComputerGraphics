@@ -77,31 +77,7 @@ void Scene::applyTransform(const Matrix4& transform) {
 }
 
 
-
-
 void Scene::applyTransformToBoundingBox(const Matrix4& transform) {
-    /*
-    const Vector4 corners[8] = {
-        boundingBox.min,
-        Vector4(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z, 1),
-        Vector4(boundingBox.min.x, boundingBox.max.y, boundingBox.min.z, 1),
-        Vector4(boundingBox.min.x, boundingBox.max.y, boundingBox.max.z, 1),
-        Vector4(boundingBox.max.x, boundingBox.min.y, boundingBox.min.z, 1),
-        Vector4(boundingBox.max.x, boundingBox.min.y, boundingBox.max.z, 1),
-        Vector4(boundingBox.max.x, boundingBox.max.y, boundingBox.min.z, 1),
-        boundingBox.max
-    };
-
-    Vector4 newMin(DBL_MAX, DBL_MAX, DBL_MAX, 1);
-    Vector4 newMax(-DBL_MAX, -DBL_MAX, -DBL_MAX, 1);
-
-    for (const Vector4& corner : corners) {
-        corner = transform.transform(corner);
-    }
-
-    boundingBox.min = newMin;
-    boundingBox.max = newMax;
-    */
     boundingBox.min = transform.transform(boundingBox.min);
     boundingBox.max = transform.transform(boundingBox.max);
     }
