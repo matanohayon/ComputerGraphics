@@ -1,6 +1,7 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include <unordered_map> //for hashing the vertices
 #include <vector>
 #include "Poly.h"
 #include "Vertex.h"
@@ -31,6 +32,9 @@ private:
     bool hasVertexNormals;        // Indicates if the scene has vertex normals
 
     bool isFirstDraw;             // Indicates if it is the first drawing
+
+    std::unordered_map<std::size_t, std::vector<Poly*>> vertexConnectivity; //hashing the vertices
+
 
 public:
     Scene();
@@ -91,6 +95,18 @@ public:
 
     // Clear the scene (reset the polygons, transformations, and bounding box)
     void clear();
+
+
+    // Add a polygon to the connectivity map
+    void addPolygonToConnectivity(const Vertex& vertex, Poly* polygon);
+
+    // Get incident polygons for a vertex
+    const std::vector<Poly*>& getIncidentPolygons(const Vertex& vertex) const;
+
+    // Hash function for vertex coordinates
+    static std::size_t hashVertex(const Vertex& vertex, double accuracy = 1e-5);
+    void calculateVertexNormals();
+
 };
 
 #endif // SCENE_H

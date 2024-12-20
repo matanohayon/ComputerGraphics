@@ -73,6 +73,7 @@ BEGIN
         MENUITEM "&Load",                       ID_FILE_LOAD
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
+    MENUITEM SEPARATOR
     POPUP "&View"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
@@ -84,6 +85,10 @@ BEGIN
         MENUITEM "Bounding Box",                ID_VIEW_BOUNDINGBOX
         MENUITEM "Vertex Normals",              ID_VIEW_VERTEXNORMAL
         MENUITEM "Polygon Normals",             ID_VIEW_POLYGONNORMALS
+        MENUITEM "Polygon Normals from *itd file", ID_VIEW_POLYGONNORMALSFROM
+        MENUITEM "Polygon Normals NOT from *itd file", ID_VIEW_POLYGONNORMALSNOTFROM
+        MENUITEM "Vertex Normals from *itd file", ID_VIEW_VERTEXNORMALSFROM
+        MENUITEM "Vertex Normals NOT from *itd file", ID_VIEW_VERTEXNORMALSNOTFROM
     END
     POPUP "A&ction"
     BEGIN
@@ -103,6 +108,7 @@ BEGIN
         MENUITEM "Mouse Sensitivity...",        ID_OPTIONS_MOUSESENSITIVITY
         MENUITEM "Object Color",                ID_OPTIONS_OBJECTCOLOR
         MENUITEM "Background Color",            ID_OPTIONS_BACKGROUNDCOLOR
+        MENUITEM "polygon fineness",            ID_OPTIONS_POLYGONFINENESS
     END
     POPUP "&Light"
     BEGIN
@@ -233,6 +239,17 @@ BEGIN
     GROUPBOX        "Texture Mapping",IDC_STATIC,118,7,182,91
 END
 
+IDD_FINENESS_CONTROL DIALOGEX 0, 0, 309, 176
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,198,155,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,252,155,50,14
+    LTEXT           "Polygon tesselation fineness",IDC_STATIC,101,40,105,30
+    CONTROL         "",IDC_SLIDER_FINENESS,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,95,78,100,15
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -303,6 +320,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 131
     END
+
+    IDD_FINENESS_CONTROL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 302
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 169
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -324,6 +349,17 @@ BEGIN
 0x6956, 0x7765, "\000" 
     IDC_LIGHT_SPACE, 0x403, 6, 0
 0x6f4c, 0x6163, 0x006c, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_FINENESS_CONTROL AFX_DIALOG_LAYOUT
+BEGIN
     0
 END
 

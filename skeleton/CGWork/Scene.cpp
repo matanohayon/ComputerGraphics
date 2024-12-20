@@ -36,47 +36,46 @@ size_t Scene::getPolygonCount() const {
     return polygons->size();
 }
 
-
+//applying a transformation to the whole scene
+// Applying a transformation to the whole scene
 void Scene::applyTransform(const Matrix4& transform) {
-
-
     sceneTransform = transform * sceneTransform; // Pre-multiply to apply new transform first
-    Matrix4 normalTransform = sceneTransform.inverse().transpose(); // Inverse-transpose for normals
+    Matrix4 normalTransform = sceneTransform.inverse().transpose(); // Inverse-transpose for transforming normals
 
     // Apply transformation to all polygons in the scene
     for (Poly* poly : *polygons) {
-
         // Apply the full transformation to all vertices
         for (Vertex& vertex : poly->getVertices()) {
             // Transform vertex position
             vertex = transform.transform(vertex);
 
+            // Transform normals if the vertex has a normal
             if (vertex.getHasNormal()) {
-                // Update normal start to match the transformed vertex position
-                Vector4 transformedStart = transform.transform(vertex.getNormalStart());
-
-                // Transform the normal direction using the inverse-transpose matrix
-                Vector4 direction = vertex.getNormalEnd() - vertex.getNormalStart();
-                Vector4 transformedDirection = normalTransform.transform(direction).normalize() * 16.0;
-
-                // Update the vertex normal with the transformed start and transformed direction
-                vertex.setNormal(transformedStart, transformedStart + transformedDirection);
+                const Vector4 direction = vertex.getNormalEnd() - vertex.getNormalStart();
+                const Vector4 transformedDirection = normalTransform.transform(direction).normalize() * 16.0;
+                const Vector4 transformedStart = transform.transform(vertex.getNormalStart());
+                vertex.setNormal(transformedStart, transformedStart + transformedDirection, vertex.isNormalProvidedFromFile());                // Keep the flag indicating whether the normal came from the file
             }
         }
 
-        // Apply the transformation to polygon normals
+        // Apply the transformation to polygon normals if they exist
         if (poly->hasPolyNormalDefined()) {
             Vector4 direction = poly->getPolyNormal().end - poly->getPolyNormal().start;
             Vector4 transformedDirection = normalTransform.transform(direction).normalize() * 16.0;
+
             Vector4 transformedStart = transform.transform(poly->getPolyNormal().start);
-            poly->setPolyNormal(PolyNormal(transformedStart, transformedStart + transformedDirection));
+            const bool originalFlag = poly->getPolyNormal().wasProvidedFromFile;
+
+            // Correctly instantiate the PolyNormal object
+            PolyNormal transformedPolyNormal(transformedStart, transformedStart + transformedDirection, originalFlag);
+            poly->setPolyNormal(transformedPolyNormal);
         }
     }
-    //calculateBoundingBox();
-    // Apply the transformation to the bounding box
-    applyTransformToBoundingBox(transform); // Use the full transformation for the bounding box
 
+    // Apply the transformation to the bounding box
+    applyTransformToBoundingBox(transform);
 }
+
 
 
 
@@ -207,4 +206,58 @@ void Scene::clear() {
     sceneTransform = Matrix4(); // Reset to identity matrix
     boundingBox = { Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0), Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0) };
     hasVertexNormals = false;
+}
+
+
+std::size_t Scene::hashVertex(const Vertex& vertex, double accuracy) {
+    auto round = [accuracy](double coord) -> int {
+        return static_cast<int>(std::round(coord / accuracy));
+    };
+    std::size_t hx = std::hash<int>()(round(vertex.x));
+    std::size_t hy = std::hash<int>()(round(vertex.y));
+    std::size_t hz = std::hash<int>()(round(vertex.z));
+    return hx ^ (hy << 1) ^ (hz << 2); // Combine hashes
+}
+
+
+void Scene::addPolygonToConnectivity(const Vertex& vertex, Poly* polygon) {
+    std::size_t vertexHash = hashVertex(vertex);
+    vertexConnectivity[vertexHash].push_back(polygon);
+}
+
+
+const std::vector<Poly*>& Scene::getIncidentPolygons(const Vertex& vertex) const {
+    static std::vector<Poly*> empty;
+    auto it = vertexConnectivity.find(hashVertex(vertex));
+    return it != vertexConnectivity.end() ? it->second : empty;
+}
+
+// for vertices with no normal in the data file, lets compute those
+void Scene::calculateVertexNormals() {
+    for (auto it = vertexConnectivity.begin(); it != vertexConnectivity.end(); ++it) {
+        std::size_t vertexHash = it->first;
+        const std::vector<Poly*>& polygons = it->second;
+
+        Vector4 averageNormal(0.0, 0.0, 0.0, 0.0);
+
+        // Compute average normal
+        for (Poly* polygon : polygons) {
+            if (polygon->hasPolyNormalDefined()) {
+                Vector4 normal = polygon->getPolyNormal().end - polygon->getPolyNormal().start;
+                averageNormal = averageNormal + normal.normalize();
+            }
+        }
+
+        averageNormal = averageNormal.normalize()*16.0;
+
+        // Assign the computed normal
+        for (Poly* polygon : polygons) {
+            for (Vertex& vertex : polygon->getVertices()) {
+                if (hashVertex(vertex) == vertexHash && !vertex.isNormalProvidedFromFile()) {
+                    const Vector4 ns(vertex.x, vertex.y, vertex.z, 1.0); // Create ns as a Vector4
+                    vertex.setNormal(ns, ns + averageNormal,false);
+                }
+            }
+        }
+    }
 }

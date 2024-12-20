@@ -4,7 +4,7 @@
 Poly::Poly()
     : hasPolyNormal(false),
     color(RGB(255, 255, 255)),
-    polyNormal(PolyNormal()) {}
+    polyNormal(PolyNormal()) {} // Correct syntax with parentheses
 
 void Poly::addVertex(const Vertex& vertex) {
     vertices.push_back(vertex);

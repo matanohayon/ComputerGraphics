@@ -12,8 +12,14 @@ class PolyNormal {
 public:
     Vector4 start;
     Vector4 end;
-    PolyNormal() : start(Vector4()), end(Vector4()) {}
-    PolyNormal(const Vector4& start, const Vector4& end) : start(start), end(end) {}
+    bool wasProvidedFromFile;
+
+    // Default constructor
+    PolyNormal() : start(Vector4()), end(Vector4()), wasProvidedFromFile(false) {}
+
+    // Constructor with start and end points
+    PolyNormal(const Vector4& start, const Vector4& end, bool wasProvidedFromFile = false)
+        : start(start), end(end), wasProvidedFromFile(wasProvidedFromFile) {}
 };
 
 

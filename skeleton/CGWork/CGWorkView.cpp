@@ -25,6 +25,7 @@ static char THIS_FILE[] = __FILE__;
 
 #include "PngWrapper.h"
 #include "iritSkel.h"
+extern IPFreeformConvStateStruct CGSkelFFCState; // access to the polygon tesselation finess
 #include "LineDrawer.h"
 
 
@@ -91,6 +92,28 @@ BEGIN_MESSAGE_MAP(CCGWorkView, CView)
 	ON_COMMAND(ID_VIEW_POLYGONNORMALS, OnPolyNormal)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_POLYGONNORMALS, OnUpdatePolyNormal)
 
+	ON_COMMAND(ID_OPTIONS_POLYGONFINENESS, &CCGWorkView::OnOptionsPolygonFineness)
+	ON_UPDATE_COMMAND_UI(ID_OPTIONS_POLYGONFINENESS, &CCGWorkView::OnUpdateOptionsPolygonFineness)
+
+	//vertexNormal and poly normal from file and not from file:
+
+	//poly from file
+// Polygon normals not from file
+	ON_COMMAND(ID_VIEW_POLYGONNORMALSNOTFROM, OnPolyNormalsNotFrom)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_POLYGONNORMALSNOTFROM, OnUpdatePolyNormalsNotFrom)
+	// Polygon normals from file
+	ON_COMMAND(ID_VIEW_POLYGONNORMALSFROM, OnPolyNormalsFrom)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_POLYGONNORMALSFROM, OnUpdatePolyNormalsFrom)
+	// Vertex normals from file
+	ON_COMMAND(ID_VIEW_VERTEXNORMALSFROM, OnVertexNormalsFrom)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_VERTEXNORMALSFROM, OnUpdateVertexNormalsFrom)
+	// Vertex normals not from file
+	ON_COMMAND(ID_VIEW_VERTEXNORMALSNOTFROM, OnVertexNormalsNotFrom)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_VERTEXNORMALSNOTFROM, OnUpdateVertexNormalsNotFrom)
+
+
+
+
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONUP()
@@ -117,6 +140,10 @@ CCGWorkView::CCGWorkView()
 	m_draw_vertex_normals = false;
 	m_draw_bounding_box = false;
 	m_uniform_color = false;
+	m_draw_poly_normals_from = false; //poly normals form file
+	m_draw_poly_normals_not_from = false; // poly normals not from file
+	m_draw_vertex_normals_from = false; //vertex normals from file
+	m_draw_vertex_normals_not_from = false; // vertex normal nor from file
 
 	// Set default values
 	m_nAxis = ID_AXIS_X;
@@ -279,10 +306,17 @@ void CCGWorkView::DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& 
 }
 
 
-void CCGWorkView::DrawPolygonEdges(CDC* pDC, Poly* poly, double screenHeight, COLORREF color, bool flagDrawNormal) {
+/*
+	bool m_draw_poly_normals_from ; //poly normals form file
+	bool m_draw_poly_normals_not_from ; // poly normals not from file
+	bool m_draw_vertex_normals_from ; //vertex normals from file
+	bool m_draw_vertex_normals_not_from ; // vertex normal nor from file
+*/
+
+
+void CCGWorkView::DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color) {
 	const std::vector<Vertex>& vertices = poly->getVertices();
 	const size_t vertexCount = vertices.size();
-
 
 	for (size_t i = 0; i < vertexCount; ++i) {
 		const Vertex& start = vertices[i];
@@ -291,10 +325,16 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, Poly* poly, double screenHeight, CO
 		// Draw polygon edge
 		DrawLineHelper(pDC, start, end, screenHeight, color);
 
-		// Draw vertex normal
-		if (start.getHasNormal() && flagDrawNormal) {
-
-			DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(255, 127, 80));
+		// Draw vertex normals based on global flags
+		if (start.getHasNormal()) {
+			if (m_draw_vertex_normals_from && start.isNormalProvidedFromFile()) {
+				// Draw normals provided from file
+				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(0, 255, 0)); // Green
+			}
+			if (m_draw_vertex_normals_not_from && !start.isNormalProvidedFromFile()) {
+				// Draw calculated normals
+				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(255, 0, 0)); // Red
+			}
 		}
 	}
 }
@@ -304,12 +344,19 @@ void CCGWorkView::DrawPolygonEdges(CDC* pDC, Poly* poly, double screenHeight, CO
 void CCGWorkView::DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, COLORREF color) {
 	if (!poly->hasPolyNormalDefined()) return;
 
-	const PolyNormal& polyNormal = poly->getPolyNormal(); // Use PolyNormal abstraction
+	const PolyNormal& polyNormal = poly->getPolyNormal();
 
-
-	// Draw the polygon normal using the helper function
-	DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, color);
+	// Draw polygon normals based on global flags
+	if (m_draw_poly_normals_from && polyNormal.wasProvidedFromFile) {
+		// Draw normals provided from file
+		DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, RGB(0, 0, 255)); // Blue
+	}
+	if (m_draw_poly_normals_not_from && !polyNormal.wasProvidedFromFile) {
+		// Draw calculated normals
+		DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, RGB(255, 165, 0)); // Orange
+	}
 }
+
 
 
 void CCGWorkView::DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color) {
@@ -342,7 +389,6 @@ void CCGWorkView::DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double scre
 // CCGWorkView drawing
 /////////////////////////////////////////////////////////////////////////////
 void CCGWorkView::OnDraw(CDC* pDC) {
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 	CCGWorkDoc* pDoc = GetDocument();
@@ -354,39 +400,30 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 
 	// Use the double-buffered DC to avoid flickering
 	CDC* pDCToUse = m_pDbDC;
+	scene.setColors(pApp->Object_color, RGB(0, 255, 0), pApp->Background_color); // Set colors
+	pDCToUse->FillSolidRect(&r, scene.getBackgroundColor()); // Fill background color
 
-	scene.setColors(pApp->Object_color, RGB(0, 255, 0), pApp->Background_color); // setting the object color and the backgrond
-	pDCToUse->FillSolidRect(&r, scene.getBackgroundColor()); // Use scene's background color
-
-	const double screenWidth = static_cast<double>(r.Width());
 	const double screenHeight = static_cast<double>(r.Height());
 
-	// warning vertex normal
-	if (!m_draw_vertex_normals && !scene.hasVertexNormalsAttribute() && !scene.getPolygons()->empty()) {
-		AfxMessageBox(_T("The Object does not have vertex normals!"));
-	}
-
-	if (!(scene.getPolygons()->empty())) {
-		// Iterate through the polygons in the scene and draw them
+	if (!scene.getPolygons()->empty()) {
 		for (Poly* poly : *scene.getPolygons()) {
 			const std::vector<Vertex>& vertices = poly->getVertices();
-			COLORREF color = poly->getColor(); // Get the color for the polygon
+			COLORREF color = poly->getColor();
+
 			if (m_uniform_color) {
 				color = RGB(255, 255, 255);
 			}
-			// Draw polygon edges
-			DrawPolygonEdges(pDCToUse, poly, screenHeight, pApp->Object_color, m_draw_vertex_normals);
 
-			// Draw polygon normals if the flag is set
-			if (m_draw_poly_normals) {
-				DrawPolygonNormal(pDCToUse, poly, screenHeight, RGB(255, 105, 180)); // pink color for poly normals
-			}
+			// Draw polygon edges and vertex normals
+			DrawPolygonEdgesAndVertexNormals(pDCToUse, poly, screenHeight, pApp->Object_color);
+
+			// Draw polygon normals
+			DrawPolygonNormal(pDCToUse, poly, screenHeight, color);
 		}
 
-		if (scene.hasBoundingBox) {
-			if (m_draw_bounding_box) {
-				DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, RGB(0, 0, 255)); // Blue color for bounding box
-			}
+		// Draw bounding box if flag is set
+		if (scene.hasBoundingBox && m_draw_bounding_box) {
+			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, RGB(0, 0, 255)); // Blue for bounding box
 		}
 
 		if (pDCToUse != m_pDC) {
@@ -451,7 +488,7 @@ void CCGWorkView::OnFileLoad() {
 		const Vector4& min = bbox.min;
 		const Vector4& max = bbox.max;
 
-		Vector4 center = Vector4(
+		const Vector4 center = Vector4(
 			(min.x + max.x) / 2.0,
 			(min.y + max.y) / 2.0,
 			(min.z + max.z) / 2.0,
@@ -460,26 +497,26 @@ void CCGWorkView::OnFileLoad() {
 		CRect r;
 		GetClientRect(&r);
 
-		double screenWidth = static_cast<double>(r.Width());
-		double screenHeight = static_cast<double>(r.Height());
-		double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+		const double screenWidth = static_cast<double>(r.Width());
+		const double screenHeight = static_cast<double>(r.Height());
+		const double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
 
-		double sceneWidth = max.x - min.x;
-		double sceneHeight = max.y - min.y;
+		const double sceneWidth = max.x - min.x;
+		const double sceneHeight = max.y - min.y;
 
-		double targetWidth = screenWidth * (1.0 - marginFactor);
-		double targetHeight = screenHeight * (1.0 - marginFactor);
+		const double targetWidth = screenWidth * (1.0 - marginFactor);
+		const double targetHeight = screenHeight * (1.0 - marginFactor);
 
-		double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
-		double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
+		const double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
+		const double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
 
-		double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
+		const double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
 
 		Matrix4 t; // Starts as the identity matrix
 
-		Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
-		Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
-		Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
+		const Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+		const Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
+		const Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
 
 		// Translate to origin (center the scene)
 		t = t * translateToScreen;
@@ -488,7 +525,11 @@ void CCGWorkView::OnFileLoad() {
 		// Translate to the screen center
 		t = t * translateToOrigin;
 
+		scene.calculateVertexNormals();
+
+
 		scene.applyTransform(t);
+
 
 		scene.updateIsFirstDraw(false);
 
@@ -745,12 +786,55 @@ void CCGWorkView::OnPolyNormal()
 	Invalidate();
 
 }
+
 void CCGWorkView::OnUpdatePolyNormal(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_draw_poly_normals);
 }
 
+void CCGWorkView::OnPolyNormalsNotFrom()
+{
+	m_draw_poly_normals_not_from = !m_draw_poly_normals_not_from;
+	Invalidate();
+}
 
+void CCGWorkView::OnUpdatePolyNormalsNotFrom(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_draw_poly_normals_not_from);
+}
+
+void CCGWorkView::OnPolyNormalsFrom()
+{
+	m_draw_poly_normals_from = !m_draw_poly_normals_from;
+	Invalidate();
+}
+
+void CCGWorkView::OnUpdatePolyNormalsFrom(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_draw_poly_normals_from);
+}
+
+void CCGWorkView::OnVertexNormalsFrom()
+{
+	m_draw_vertex_normals_from = !m_draw_vertex_normals_from;
+	Invalidate();
+}
+
+void CCGWorkView::OnUpdateVertexNormalsFrom(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_draw_vertex_normals_from);
+}
+
+void CCGWorkView::OnVertexNormalsNotFrom()
+{
+	m_draw_vertex_normals_not_from = !m_draw_vertex_normals_not_from;
+	Invalidate();
+}
+
+void CCGWorkView::OnUpdateVertexNormalsNotFrom(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_draw_vertex_normals_not_from);
+}
 
 /////////////////////////////// MOUSE CONTROL //////////////////////////////////////////////
 
@@ -945,36 +1029,34 @@ void CCGWorkView::ApplyTransformation(Matrix4& t)
 	CRect r;
 	GetClientRect(&r);
 
-	double screenWidth = static_cast<double>(r.Width());
-	double screenHeight = static_cast<double>(r.Height());
-	double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+	const double screenWidth = static_cast<double>(r.Width());
+	const double screenHeight = static_cast<double>(r.Height());
+	const double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
 
-	double sceneWidth = max.x - min.x;
-	double sceneHeight = max.y - min.y;
+	const double sceneWidth = max.x - min.x;
+	const double sceneHeight = max.y - min.y;
 
-	double targetWidth = screenWidth * (1.0 - marginFactor);
-	double targetHeight = screenHeight * (1.0 - marginFactor);
+	const double targetWidth = screenWidth * (1.0 - marginFactor);
+	const double targetHeight = screenHeight * (1.0 - marginFactor);
 
-	double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
-	double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
+	const double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
+	const double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
 
-	double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
+	const double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
 
 
-	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
-	Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
-	Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
+	const Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+	const Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
+	const Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
 
 	// Translate to origin (center the scene)
 	t = t * translateToScreen;
 	// Scale the scene to fit within the target screen area
-	//t = t * scaling;
+	t = t * scaling;
 	// Translate to the screen center
 	t = t * translateToOrigin;
 
 	scene.applyTransform(t);
-	Invalidate();
-
 }
 
 void CCGWorkView::MapMouseMovement(int deg)
@@ -1003,3 +1085,59 @@ void CCGWorkView::MapMouseMovement(int deg)
 	}
 }
 
+
+
+
+
+
+////////////polygon finess:
+void CCGWorkView::OnUpdateOptionsPolygonFineness(CCmdUI* pCmdUI)
+{
+	// Enable the menu item
+	pCmdUI->Enable(TRUE);
+}
+
+
+void CCGWorkView::OnOptionsPolygonFineness()
+{
+	// Create and display the dialog
+	CDialog finenessDialog(IDD_FINENESS_CONTROL);
+	if (finenessDialog.DoModal() == IDOK)
+	{
+		// Handle the dialog's OK action if needed
+	}
+}
+
+
+
+//controlling the slider for the polygon tessetation finess
+void CCGWorkView::InitializeFinenessSlider()
+{
+	// Get the slider control by its ID
+	CSliderCtrl* pSlider = (CSliderCtrl*)GetDlgItem(IDC_SLIDER_FINENESS);
+	if (pSlider != nullptr)
+	{
+		pSlider->SetRange(2, 100);                  // Set the range from 2 to 100
+		pSlider->SetPos(CGSkelFFCState.FineNess);  // Initialize with the current fineness value
+		m_finenessSlider.Attach(pSlider->m_hWnd);  // Attach the slider to the member variable
+	}
+}
+
+void CCGWorkView::OnFinenessSliderChanged()
+{
+	// Get the current value from the slider
+	int fineness = m_finenessSlider.GetPos();
+
+	// Update the global tessellation fineness variable
+	CGSkelFFCState.FineNess = fineness;
+
+	// Update the scene with the new fineness
+	UpdateSceneForFineness();
+}
+
+void CCGWorkView::UpdateSceneForFineness()
+{
+	// Trigger a redraw of the view
+	Invalidate();
+	UpdateWindow();
+}

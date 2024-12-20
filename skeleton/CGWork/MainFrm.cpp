@@ -25,6 +25,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	ON_WM_CREATE()
 	ON_COMMAND(ID_OPTIONS_OBJECTCOLOR, &CMainFrame::OnObjectColor)
+
 	ON_COMMAND(ID_OPTIONS_BACKGROUNDCOLOR, &CMainFrame::OnBackgroundColor)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()

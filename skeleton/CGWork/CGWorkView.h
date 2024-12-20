@@ -32,10 +32,16 @@ public:
 public:
 
 private:
+	CSliderCtrl m_finenessSlider; // Slider control for tessellation fineness
+
 	bool m_draw_poly_normals; //flag to choose whether to draw poly normals
 	bool m_draw_vertex_normals;//flag to choose whether to draw vertex normals
 	bool m_draw_bounding_box;
 	bool m_uniform_color;
+	bool m_draw_poly_normals_from ; //poly normals form file
+	bool m_draw_poly_normals_not_from ; // poly normals not from file
+	bool m_draw_vertex_normals_from ; //vertex normals from file
+	bool m_draw_vertex_normals_not_from ; // vertex normal nor from file
 
 
 	int m_nAxis;				// Axis of Action, X Y or Z
@@ -83,6 +89,11 @@ protected:
 
 	virtual void RenderScene();
 
+	// Command Handlers
+	void OnOptionsPolygonFineness();             // Opens the polygon fineness dialog
+	void OnUpdateOptionsPolygonFineness(CCmdUI* pCmdUI); // Enables the menu item
+
+
 
 	HGLRC    m_hRC;			// holds the Rendering Context
 	CDC* m_pDC;			// holds the Device Context
@@ -95,9 +106,11 @@ protected:
 
 	// New helper function declarations
 private:
-	void DrawPolygonEdges(CDC* pDC, Poly* poly, double screenHeight, COLORREF color, bool flagDrawNormal);
+	void InitializeFinenessSlider(); // Initializes the fineness slider
+	void OnFinenessSliderChanged();  // Handles fineness slider changes
+	void UpdateSceneForFineness();
+	void DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color);
 	void DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, COLORREF color);
-	void DrawVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color);
 	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
 	void DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& end, double screenHeight, COLORREF color);
 
@@ -162,6 +175,26 @@ protected:
 
 	afx_msg void OnPolyNormal();
 	afx_msg void OnUpdatePolyNormal(CCmdUI* pCmdUI);
+	/*
+	poly and vert from and not from
+	*/
+
+	afx_msg void OnPolyNormalsNotFrom();
+	afx_msg void OnUpdatePolyNormalsNotFrom(CCmdUI* pCmdUI);
+
+
+	afx_msg void OnPolyNormalsFrom();
+	afx_msg void OnUpdatePolyNormalsFrom(CCmdUI* pCmdUI);
+
+
+	afx_msg void OnVertexNormalsFrom();
+	afx_msg void OnUpdateVertexNormalsFrom(CCmdUI* pCmdUI);
+
+	afx_msg void OnVertexNormalsNotFrom();
+	afx_msg void OnUpdateVertexNormalsNotFrom(CCmdUI* pCmdUI);
+
+
+
 
 
 	//}}AFX_MSG
