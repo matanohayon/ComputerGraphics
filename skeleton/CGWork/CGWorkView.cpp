@@ -335,11 +335,11 @@ void CCGWorkView::DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double 
 		if (start.getHasNormal()) {
 			if (m_draw_vertex_normals_from && start.isNormalProvidedFromFile()) {
 				// Draw normals provided from file
-				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(0, 255, 0)); // Green
+				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, color); 
 			}
 			if (m_draw_vertex_normals_not_from && !start.isNormalProvidedFromFile()) {
 				// Draw calculated normals
-				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, RGB(255, 0, 0)); // Red
+				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, color);
 			}
 		}
 	}
@@ -355,11 +355,11 @@ void CCGWorkView::DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, C
 	// Draw polygon normals based on global flags
 	if (m_draw_poly_normals_from && polyNormal.wasProvidedFromFile) {
 		// Draw normals provided from file
-		DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, RGB(0, 0, 255)); // Blue
+		DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, color); // Blue
 	}
 	if (m_draw_poly_normals_not_from && !polyNormal.wasProvidedFromFile) {
 		// Draw calculated normals
-		DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, RGB(255, 165, 0)); // Orange
+		DrawLineHelper(pDC, polyNormal.start, polyNormal.end, screenHeight, color); // Orange
 	}
 }
 
@@ -410,26 +410,23 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 	pDCToUse->FillSolidRect(&r, scene.getBackgroundColor()); // Fill background color
 
 	const double screenHeight = static_cast<double>(r.Height());
-
+	const COLORREF red = RGB(255, 0, 0);
+	const COLORREF green = RGB(0, 255, 0);
 	if (!scene.getPolygons()->empty()) {
 		for (Poly* poly : *scene.getPolygons()) {
 			const std::vector<Vertex>& vertices = poly->getVertices();
 			COLORREF color = poly->getColor();
 
-			if (m_uniform_color) {
-				color = RGB(255, 255, 255);
-			}
-
 			// Draw polygon edges and vertex normals
 			DrawPolygonEdgesAndVertexNormals(pDCToUse, poly, screenHeight, pApp->Object_color);
 
 			// Draw polygon normals
-			DrawPolygonNormal(pDCToUse, poly, screenHeight, color);
+			DrawPolygonNormal(pDCToUse, poly, screenHeight, red);
 		}
 
 		// Draw bounding box if flag is set
 		if (scene.hasBoundingBox && m_draw_bounding_box) {
-			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, RGB(0, 0, 255)); // Blue for bounding box
+			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, green); // Blue for bounding box
 		}
 
 		if (pDCToUse != m_pDC) {
@@ -920,41 +917,84 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 }
 
 
+////transformation matrices
+
+Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
+	// Calculate the center of the object
+	const BoundingBox& bbox = scene.getBoundingBox();
+	Vector4 center = Vector4(
+		(bbox.min.x + bbox.max.x) / 2.0,
+		(bbox.min.y + bbox.max.y) / 2.0,
+		(bbox.min.z + bbox.max.z) / 2.0,
+		1.0 // Homogeneous coordinate
+	);
+
+	// Create translation matrices
+	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+	Matrix4 translateBack = Matrix4::translate(center.x, center.y, center.z);
+
+	// Combine transformations: Translate to origin -> Rotate -> Translate back
+	return translateBack * rotationMatrix * translateToOrigin;
+}
+
+
+// Apply rotation around the X-axis
 void CCGWorkView::ApplyXRotation(int d) {
-
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.rotateX(d);
+
+	// Create the rotation matrix
+	Matrix4 rotation = Matrix4::rotateX(d);
+
+	// Create the centered rotation matrix
+	Matrix4 centeredRotation = CreateCenteredRotationMatrix(rotation);
+
+	// Apply the transformation
+	ApplyTransformation(centeredRotation);
+
+	// Update the status bar
 	CString str;
-	str.Format(_T("deg = %d, sens = %d"), d, pApp->r_slider_value);
+	str.Format(_T("X-Rotation: deg = %d, sens = %d"), d, pApp->r_slider_value);
 	STATUS_BAR_TEXT(str);
-	ApplyTransformation(t);
-
-
 }
 
+// Apply rotation around the Y-axis
 void CCGWorkView::ApplyYRotation(int d) {
-
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.rotateY(d);
 
-	ApplyTransformation(t);
+	// Create the rotation matrix
+	Matrix4 rotation = Matrix4::rotateY(d);
 
+	// Create the centered rotation matrix
+	Matrix4 centeredRotation = CreateCenteredRotationMatrix(rotation);
+
+	// Apply the transformation
+	ApplyTransformation(centeredRotation);
+
+	// Update the status bar
+	CString str;
+	str.Format(_T("Y-Rotation: deg = %d, sens = %d"), d, pApp->r_slider_value);
+	STATUS_BAR_TEXT(str);
 }
 
+// Apply rotation around the Z-axis
 void CCGWorkView::ApplyZRotation(int d) {
-
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.rotateZ(d);
 
-	ApplyTransformation(t);
+	// Create the rotation matrix
+	Matrix4 rotation = Matrix4::rotateZ(d);
 
+	// Create the centered rotation matrix
+	Matrix4 centeredRotation = CreateCenteredRotationMatrix(rotation);
+
+	// Apply the transformation
+	ApplyTransformation(centeredRotation);
+
+	// Update the status bar
+	CString str;
+	str.Format(_T("Z-Rotation: deg = %d, sens = %d"), d, pApp->r_slider_value);
+	STATUS_BAR_TEXT(str);
 }
+
 
 void CCGWorkView::ApplyXTranslation(int d) {
 
