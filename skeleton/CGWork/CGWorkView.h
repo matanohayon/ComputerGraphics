@@ -125,9 +125,9 @@ private:
 	void ApplyYTranslation(int d);
 	void ApplyZTranslation(int d);
 
-	void ApplyXScale(int d);
-	void ApplyYScale(int d);
-	void ApplyZScale(int d);
+	void ApplyXScale(double d);
+	void ApplyYScale(double d);
+	void ApplyZScale(double d);
 
 
 	void ApplyTransformation(Matrix4& t);

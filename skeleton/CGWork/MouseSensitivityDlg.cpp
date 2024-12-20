@@ -11,7 +11,7 @@
 
 IMPLEMENT_DYNAMIC(MouseSensitivityDlg, CDialog)
 
-int rotate = 1, translate = 1, scale = 1;
+int rotate = 15, translate = 2, scale = 2;
 
 MouseSensitivityDlg::MouseSensitivityDlg(CWnd* pParent /*=nullptr*/)
 	: CDialog(IDD_MOUSE, pParent)
@@ -43,11 +43,11 @@ BOOL MouseSensitivityDlg::OnInitDialog() {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 
-	T_slider.SetRange(0, 10);
+	T_slider.SetRange(0, 30);
 	T_slider.SetPos(pApp->t_slider_value);
-	R_slider.SetRange(0, 10);
+	R_slider.SetRange(0, 30);
 	R_slider.SetPos(pApp->r_slider_value);
-	S_slider.SetRange(0, 10);
+	S_slider.SetRange(0, 30);
 	S_slider.SetPos(pApp->s_slider_value);
 
 	return TRUE;
@@ -93,11 +93,11 @@ void MouseSensitivityDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 
 void MouseSensitivityDlg::OnDefaultsButtonClicked() {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	pApp->t_slider_value = 1;
+	pApp->t_slider_value = 5;
 	T_slider.SetPos(pApp->t_slider_value);
-	pApp->r_slider_value = 1;
+	pApp->r_slider_value = 5;
 	R_slider.SetPos(pApp->r_slider_value);
-	pApp->s_slider_value = 1;
+	pApp->s_slider_value = 5;
 	S_slider.SetPos(pApp->s_slider_value);
 
 

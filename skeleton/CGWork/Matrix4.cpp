@@ -66,7 +66,10 @@ Vector4 Matrix4::transform(const Vector4& v) const {
         newW = 1.0; // Normalize w to 1 for homogeneous coordinates
 
     }
-
+    else if (newW == 0.0) {
+    // Handle the case where w = 0. Avoid division by zero.
+    throw std::runtime_error("Invalid transformation: w = 0");
+    }
     return Vector4(newX, newY, newZ, newW);
 }
 
@@ -91,10 +94,15 @@ Matrix4 Matrix4::scale(float sx, float sy, float sz) {
     return mat;
 }
 
+inline float ToRadians(float degrees) {
+    return degrees * (PI / 180.0);
+}
+
 // Rotation matrix around X-axis
 Matrix4 Matrix4::rotateX(float angle) {
     Matrix4 mat;
-    float cosA = cos(angle), sinA = sin(angle);
+    float radians = ToRadians(angle); // Convert degrees to radians
+    float cosA = cos(radians), sinA = sin(radians);
     mat.m[1][1] = cosA;
     mat.m[1][2] = -sinA;
     mat.m[2][1] = sinA;
@@ -105,7 +113,8 @@ Matrix4 Matrix4::rotateX(float angle) {
 // Rotation matrix around Y-axis
 Matrix4 Matrix4::rotateY(float angle) {
     Matrix4 mat;
-    float cosA = cos(angle), sinA = sin(angle);
+    float radians = ToRadians(angle); // Convert degrees to radians
+    float cosA = cos(radians), sinA = sin(radians);
     mat.m[0][0] = cosA;
     mat.m[0][2] = sinA;
     mat.m[2][0] = -sinA;
@@ -116,7 +125,8 @@ Matrix4 Matrix4::rotateY(float angle) {
 // Rotation matrix around Z-axis
 Matrix4 Matrix4::rotateZ(float angle) {
     Matrix4 mat;
-    float cosA = cos(angle), sinA = sin(angle);
+    float radians = ToRadians(angle); // Convert degrees to radians
+    float cosA = cos(radians), sinA = sin(radians);
     mat.m[0][0] = cosA;
     mat.m[0][1] = -sinA;
     mat.m[1][0] = sinA;

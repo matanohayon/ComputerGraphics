@@ -39,8 +39,8 @@ size_t Scene::getPolygonCount() const {
 //applying a transformation to the whole scene
 // Applying a transformation to the whole scene
 void Scene::applyTransform(const Matrix4& transform) {
-    sceneTransform = transform * sceneTransform; // Pre-multiply to apply new transform first
-    Matrix4 normalTransform = sceneTransform.inverse().transpose(); // Inverse-transpose for transforming normals
+
+    Matrix4 normalTransform = transform.inverse().transpose(); // Inverse-transpose for transforming normals
 
     // Apply transformation to all polygons in the scene
     for (Poly* poly : *polygons) {
@@ -80,7 +80,8 @@ void Scene::applyTransform(const Matrix4& transform) {
 
 
 void Scene::applyTransformToBoundingBox(const Matrix4& transform) {
-    Vector4 corners[8] = {
+    /*
+    const Vector4 corners[8] = {
         boundingBox.min,
         Vector4(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z, 1),
         Vector4(boundingBox.min.x, boundingBox.max.y, boundingBox.min.z, 1),
@@ -92,17 +93,18 @@ void Scene::applyTransformToBoundingBox(const Matrix4& transform) {
     };
 
     Vector4 newMin(DBL_MAX, DBL_MAX, DBL_MAX, 1);
-    Vector4 newMax(DBL_MIN, DBL_MIN, DBL_MIN, 1);
+    Vector4 newMax(-DBL_MAX, -DBL_MAX, -DBL_MAX, 1);
 
     for (const Vector4& corner : corners) {
-        Vector4 transformedCorner = transform.transform(corner);
-        newMin.updateMin(transformedCorner);
-        newMax.updateMax(transformedCorner);
+        corner = transform.transform(corner);
     }
 
     boundingBox.min = newMin;
     boundingBox.max = newMax;
-}
+    */
+    boundingBox.min = transform.transform(boundingBox.min);
+    boundingBox.max = transform.transform(boundingBox.max);
+    }
 
 // Calculate the bounding box of the scene
 void Scene::calculateBoundingBox() {
@@ -117,8 +119,8 @@ void Scene::calculateBoundingBoxFromVertices() {
         boundingBox.max = Vector4(0, 0, 0, 1);
         return;
     }
-    boundingBox.min = Vector4(DBL_MAX, DBL_MAX, DBL_MAX, 1.0);
-    boundingBox.max = Vector4(DBL_MIN, DBL_MIN, DBL_MIN, 1.0);
+    Vector4 newMin(DBL_MAX, DBL_MAX, DBL_MAX, 1);
+    Vector4 newMax(-DBL_MAX, -DBL_MAX, -DBL_MAX, 1);
 
     for (Poly* poly : *polygons) {
         for (const Vertex& vertex : poly->getVertices()) {

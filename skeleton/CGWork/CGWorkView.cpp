@@ -530,7 +530,7 @@ void CCGWorkView::OnFileLoad() {
 		CGSkelProcessIritDataFiles(m_strItdFileName, 1);
 
 		// Calculate bounding box and determine initial transformation
-		Matrix4 t = getMatrixToCenterObject();
+		 Matrix4 const t = getMatrixToCenterObject();
 
 		scene.calculateVertexNormals();
 
@@ -937,6 +937,31 @@ Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
 	return translateBack * rotationMatrix * translateToOrigin;
 }
 
+Matrix4 CreateCenteredScalingMatrix(double scaleX, double scaleY, double scaleZ) {
+	// Calculate the center of the object using the bounding box
+	const BoundingBox& bbox = scene.getBoundingBox();
+	const Vector4& min = bbox.min;
+	const Vector4& max = bbox.max;
+	Vector4 center(
+		(min.x + max.x) / 2.0,
+		(min.y + max.y) / 2.0,
+		(min.z + max.z) / 2.0,
+		1.0
+	);
+
+	// Translation to the origin
+	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
+
+	// Scaling matrix
+	Matrix4 scaling = Matrix4::scale(scaleX, scaleY, scaleZ);
+
+	// Translation back to the center
+	Matrix4 translateBack = Matrix4::translate(center.x, center.y, center.z);
+
+	// Combine transformations
+	return translateBack * scaling * translateToOrigin;
+}
+
 
 // Apply rotation around the X-axis
 void CCGWorkView::ApplyXRotation(int d) {
@@ -981,7 +1006,7 @@ void CCGWorkView::ApplyZRotation(int d) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 	// Create the rotation matrix
-	Matrix4 rotation = Matrix4::rotateZ(d);
+	const Matrix4 rotation = Matrix4::rotateZ(d);
 
 	// Create the centered rotation matrix
 	Matrix4 centeredRotation = CreateCenteredRotationMatrix(rotation);
@@ -997,71 +1022,74 @@ void CCGWorkView::ApplyZRotation(int d) {
 
 
 void CCGWorkView::ApplyXTranslation(int d) {
-
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.translate(d, 1, 1);
+	Matrix4 transformation = Matrix4::translate(d, 0, 0);
 
-	ApplyTransformation(t);
+	ApplyTransformation(transformation);
 
+	// Update status bar
+	CString str;
+	str.Format(_T("Translated along X: %d"), d);
+	STATUS_BAR_TEXT(str);
 }
 
 void CCGWorkView::ApplyYTranslation(int d) {
-
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.translate(1, d, 1);
+	Matrix4 transformation = Matrix4::translate(0, d, 0);
 
-	ApplyTransformation(t);
+	ApplyTransformation(transformation);
 
+	// Update status bar
+	CString str;
+	str.Format(_T("Translated along Y: %d"), d);
+	STATUS_BAR_TEXT(str);
 }
 
 void CCGWorkView::ApplyZTranslation(int d) {
-
-
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.translate(1, 1, d);
+	Matrix4 transformation = Matrix4::translate(0, 0, d);
 
-	ApplyTransformation(t);
+	ApplyTransformation(transformation);
 
+	// Update status bar
+	CString str;
+	str.Format(_T("Translated along Z: %d"), d);
+	STATUS_BAR_TEXT(str);
 }
 
-void CCGWorkView::ApplyXScale(int d) {
 
-
+void CCGWorkView::ApplyXScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.scale(d, 1, 1);
+	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(factor, 1.0, 1.0);
+	ApplyTransformation(scalingMatrix);
 
-	ApplyTransformation(t);
-
+	// Update status bar
+	CString str;
+	str.Format(_T("Scaled along X by factor: %.2f"), factor);
+	STATUS_BAR_TEXT(str);
 }
 
-void CCGWorkView::ApplyYScale(int d) {
-
-
+void CCGWorkView::ApplyYScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.scale(1, d, 1);
+	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(1.0, factor, 1.0);
+	ApplyTransformation(scalingMatrix);
 
-	ApplyTransformation(t);
-
+	// Update status bar
+	CString str;
+	str.Format(_T("Scaled along Y by factor: %.2f"), factor);
+	STATUS_BAR_TEXT(str);
 }
 
-void CCGWorkView::ApplyZScale(int d) {
-
-
+void CCGWorkView::ApplyZScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 tranformation;
-	Matrix4 t = tranformation.scale(1, 1, d);
+	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(1.0, 1.0, factor);
+	ApplyTransformation(scalingMatrix);
 
-	ApplyTransformation(t);
-
+	// Update status bar
+	CString str;
+	str.Format(_T("Scaled along Z by factor: %.2f"), factor);
+	STATUS_BAR_TEXT(str);
 }
-
 
 void CCGWorkView::ApplyTransformation(Matrix4& t)
 {
@@ -1069,31 +1097,46 @@ void CCGWorkView::ApplyTransformation(Matrix4& t)
 	Invalidate(); // Trigger a redraw
 }
 
-void CCGWorkView::MapMouseMovement(int deg)
-{
+void CCGWorkView::MapMouseMovement(int deg) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	if (m_nAction == ID_ACTION_ROTATE)
-	{
-		deg = deg * pApp->r_slider_value;
-		if (m_nAxis == ID_AXIS_X) ApplyXRotation(deg);
-		if (m_nAxis == ID_AXIS_Y) ApplyYRotation(deg);
-		if (m_nAxis == ID_AXIS_Z) ApplyZRotation(deg);
+
+	// Scale deg based on the selected action
+	if (m_nAction == ID_ACTION_ROTATE) {
+		deg *= pApp->r_slider_value;
 	}
-	if (m_nAction == ID_ACTION_TRANSLATE)
-	{
-		deg = deg * pApp->t_slider_value;
-		if (m_nAxis == ID_AXIS_X) ApplyXTranslation(deg);
-		if (m_nAxis == ID_AXIS_Y)  ApplyYTranslation(deg);
-		if (m_nAxis == ID_AXIS_Z)  ApplyZTranslation(deg);
+	else if (m_nAction == ID_ACTION_TRANSLATE) {
+		deg *= pApp->t_slider_value;
 	}
-	if (m_nAction == ID_ACTION_SCALE)
-	{
-		deg = deg * pApp->s_slider_value;
-		if (m_nAxis == ID_AXIS_X) ApplyXScale(deg);
-		if (m_nAxis == ID_AXIS_Y) ApplyYScale(deg);
-		if (m_nAxis == ID_AXIS_Z) ApplyZScale(deg);
+	else if (m_nAction == ID_ACTION_SCALE) {
+		deg *= pApp->s_slider_value;
+	}
+	else {
+		return; // Invalid action, exit early
+	}
+
+	// Perform the transformation based on the selected axis
+	switch (m_nAxis) {
+	case ID_AXIS_X:
+		if (m_nAction == ID_ACTION_ROTATE) ApplyXRotation(deg);
+		else if (m_nAction == ID_ACTION_TRANSLATE) ApplyXTranslation(deg);
+		else if (m_nAction == ID_ACTION_SCALE) ApplyXScale(deg);
+		break;
+	case ID_AXIS_Y:
+		if (m_nAction == ID_ACTION_ROTATE) ApplyYRotation(deg);
+		else if (m_nAction == ID_ACTION_TRANSLATE) ApplyYTranslation(deg);
+		else if (m_nAction == ID_ACTION_SCALE) ApplyYScale(deg);
+		break;
+	case ID_AXIS_Z:
+		if (m_nAction == ID_ACTION_ROTATE) ApplyZRotation(deg);
+		else if (m_nAction == ID_ACTION_TRANSLATE) ApplyZTranslation(deg);
+		else if (m_nAction == ID_ACTION_SCALE) ApplyZScale(deg);
+		break;
+	default:
+		// Invalid axis, do nothing
+		break;
 	}
 }
+
 
 
 
