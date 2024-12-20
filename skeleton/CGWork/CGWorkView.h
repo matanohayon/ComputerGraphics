@@ -114,6 +114,7 @@ private:
 	void DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, COLORREF color);
 	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
 	void DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& end, double screenHeight, COLORREF color);
+
 	Matrix4 getMatrixToCenterObject();
 
 	void ApplyXRotation(int d);

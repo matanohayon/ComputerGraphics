@@ -489,7 +489,7 @@ Matrix4 CCGWorkView::getMatrixToCenterObject() {
 
 	const double screenWidth = static_cast<double>(r.Width());
 	const double screenHeight = static_cast<double>(r.Height());
-	const double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
+	const double marginFactor = 0.47; // initial load will onlu go from . meaning the center of the window
 
 	const double sceneWidth = max.x - min.x;
 	const double sceneHeight = max.y - min.y;
@@ -536,7 +536,6 @@ void CCGWorkView::OnFileLoad() {
 		Matrix4 t = getMatrixToCenterObject();
 
 		scene.calculateVertexNormals();
-
 
 		scene.applyTransform(t);
 
@@ -1026,47 +1025,8 @@ void CCGWorkView::ApplyZScale(int d) {
 
 void CCGWorkView::ApplyTransformation(Matrix4& t)
 {
-	const BoundingBox& bbox = scene.getBoundingBox();
-	const Vector4& min = bbox.min;
-	const Vector4& max = bbox.max;
-
-	Vector4 center = Vector4(
-		(min.x + max.x) / 2.0,
-		(min.y + max.y) / 2.0,
-		(min.z + max.z) / 2.0,
-		1.0 // Maintain consistent w for homogeneous coordinates
-	);
-	CRect r;
-	GetClientRect(&r);
-
-	const double screenWidth = static_cast<double>(r.Width());
-	const double screenHeight = static_cast<double>(r.Height());
-	const double marginFactor = 0.25; // initial load will onlu go from 0.25 to 0.75 of the screen in x and y. meaning the center of the window
-
-	const double sceneWidth = max.x - min.x;
-	const double sceneHeight = max.y - min.y;
-
-	const double targetWidth = screenWidth * (1.0 - marginFactor);
-	const double targetHeight = screenHeight * (1.0 - marginFactor);
-
-	const double scaleX = sceneWidth > 1e-6 ? targetWidth / sceneWidth : 1.0;
-	const double scaleY = sceneHeight > 1e-6 ? targetHeight / sceneHeight : 1.0;
-
-	const double sceneScale = (scaleX < scaleY) ? scaleX : scaleY;
-
-
-	const Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
-	const Matrix4 scaling = Matrix4::scale(sceneScale, sceneScale, sceneScale);
-	const Matrix4 translateToScreen = Matrix4::translate(screenWidth / 2.0, screenHeight / 2.0, 0.0);
-
-	// Translate to origin (center the scene)
-	t = t * translateToScreen;
-	// Scale the scene to fit within the target screen area
-	t = t * scaling;
-	// Translate to the screen center
-	t = t * translateToOrigin;
-
-	scene.applyTransform(t);
+	scene.applyTransform(t); // Directly apply the transformation to the scene
+	Invalidate(); // Trigger a redraw
 }
 
 void CCGWorkView::MapMouseMovement(int deg)
