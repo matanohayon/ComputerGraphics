@@ -110,7 +110,7 @@ private:
 	void InitializeFinenessSlider(); // Initializes the fineness slider
 	void OnFinenessSliderChanged();  // Handles fineness slider changes
 	void UpdateSceneForFineness();
-	void DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color);
+	void DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color, COLORREF c2);
 	void DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, COLORREF color);
 	void DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color);
 	void DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& end, double screenHeight, COLORREF color);

@@ -320,7 +320,7 @@ void CCGWorkView::DrawLineHelper(CDC* pDC, const Vector4& start, const Vector4& 
 */
 
 
-void CCGWorkView::DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color) {
+void CCGWorkView::DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double screenHeight, COLORREF color, COLORREF c2) {
 	const std::vector<Vertex>& vertices = poly->getVertices();
 	const size_t vertexCount = vertices.size();
 
@@ -335,11 +335,11 @@ void CCGWorkView::DrawPolygonEdgesAndVertexNormals(CDC* pDC, Poly* poly, double 
 		if (start.getHasNormal()) {
 			if (m_draw_vertex_normals_from && start.isNormalProvidedFromFile()) {
 				// Draw normals provided from file
-				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, color); 
+				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, c2); 
 			}
 			if (m_draw_vertex_normals_not_from && !start.isNormalProvidedFromFile()) {
 				// Draw calculated normals
-				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, color);
+				DrawLineHelper(pDC, start.getNormalStart(), start.getNormalEnd(), screenHeight, c2);
 			}
 		}
 	}
@@ -410,7 +410,6 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 	pDCToUse->FillSolidRect(&r, scene.getBackgroundColor()); // Fill background color
 
 	const double screenHeight = static_cast<double>(r.Height());
-	const COLORREF red = RGB(255, 0, 0);
 	const COLORREF green = RGB(0, 255, 0);
 	if (!scene.getPolygons()->empty()) {
 		for (Poly* poly : *scene.getPolygons()) {
@@ -418,10 +417,10 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 			COLORREF color = poly->getColor();
 
 			// Draw polygon edges and vertex normals
-			DrawPolygonEdgesAndVertexNormals(pDCToUse, poly, screenHeight, pApp->Object_color);
+			DrawPolygonEdgesAndVertexNormals(pDCToUse, poly, screenHeight, pApp->Object_color, green);
 
 			// Draw polygon normals
-			DrawPolygonNormal(pDCToUse, poly, screenHeight, red);
+			DrawPolygonNormal(pDCToUse, poly, screenHeight, green);
 		}
 
 		// Draw bounding box if flag is set
@@ -882,7 +881,7 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 		int diffrence = prev_start.x - point.x;
 		prev_start = point;
 		CString str;
-		str.Format(_T("raw diff= %d    calculated diff %d\n"), diffrence, diffrence / MOUSE_FACTOR);
+		//str.Format(_T("raw diff= %d calculated diff %d\n"), diffrence, diffrence / MOUSE_FACTOR);
 		STATUS_BAR_TEXT(str);
 		diffrence = diffrence / MOUSE_FACTOR;
 
@@ -891,9 +890,9 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 
 	}
 
-	CString str;
-	str.Format(_T("mouse position = ( %d , %d )\n"), point.x, point.y);
-	STATUS_BAR_TEXT(str);
+	//CString str;
+	//str.Format(_T("mouse position = ( %d , %d )\n"), point.x, point.y);
+	//STATUS_BAR_TEXT(str);
 
 	CView::OnMouseMove(nFlags, point);
 }
@@ -1063,13 +1062,24 @@ void CCGWorkView::ApplyZTranslation(int d) {
 
 
 double validateFactor(double factor) {
-	const double threshold = 1e-2;
+	if (factor == 0) {
+		return 1;
+	}
+	else if (factor >= 0) {
+		return 1.2;
+	}lid 
+	else {
+		return 0.81;
+	}
+	/*
+	const double threshold = 0.01;
 	if (std::abs(factor) < threshold) {
 		// Return the threshold value with the same sign as the original factor
 		return (factor < 0) ? -threshold : threshold;
 	}
 	return factor; // Return the original factor if it's above the threshold
-}
+	*/
+	}
 
 void CCGWorkView::ApplyXScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();

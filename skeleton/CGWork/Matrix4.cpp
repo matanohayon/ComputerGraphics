@@ -91,6 +91,7 @@ Matrix4 Matrix4::scale(float sx, float sy, float sz) {
     mat.m[0][0] = sx;
     mat.m[1][1] = sy;
     mat.m[2][2] = sz;
+    mat.m[3][3] = 1.0; // Preserve homogeneous coordinate
     return mat;
 }
 
