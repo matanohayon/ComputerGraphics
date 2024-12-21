@@ -15,6 +15,9 @@
 #include "ip_cnvrt.h"
 #include "symb_lib.h"
 
+extern IPFreeformConvStateStruct CGSkelFFCState;
+
+
 bool CGSkelProcessIritDataFiles(CString &FileNames, int NumFiles);
 void CGSkelDumpOneTraversedObject(IPObjectStruct *PObj, IrtHmgnMatType Mat, void *Data);
 int CGSkelGetObjectColor(IPObjectStruct *PObj, double RGB[3]);

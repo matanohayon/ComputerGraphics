@@ -27,6 +27,8 @@ public:
 	int t_slider_value;
 	int r_slider_value;
 	int s_slider_value;
+	int p_slider_polyFineness_value;
+
 	COLORREF Object_color;
 	COLORREF Background_color;
 	double d;

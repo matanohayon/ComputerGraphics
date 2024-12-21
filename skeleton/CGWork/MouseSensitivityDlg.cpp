@@ -99,7 +99,4 @@ void MouseSensitivityDlg::OnDefaultsButtonClicked() {
 	R_slider.SetPos(pApp->r_slider_value);
 	pApp->s_slider_value = 5;
 	S_slider.SetPos(pApp->s_slider_value);
-
-
-
 }

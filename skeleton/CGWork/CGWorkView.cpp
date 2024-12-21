@@ -427,6 +427,7 @@ void CCGWorkView::OnDraw(CDC* pDC) {
 		// Draw bounding box if flag is set
 		if (scene.hasBoundingBox && m_draw_bounding_box) {
 			DrawBoundingBox(pDCToUse, scene.getBoundingBox(), screenHeight, green); // Blue for bounding box
+
 		}
 
 		if (pDCToUse != m_pDC) {
@@ -530,7 +531,7 @@ void CCGWorkView::OnFileLoad() {
 		CGSkelProcessIritDataFiles(m_strItdFileName, 1);
 
 		// Calculate bounding box and determine initial transformation
-		 Matrix4 const t = getMatrixToCenterObject();
+		 Matrix4 t = getMatrixToCenterObject();
 
 		scene.calculateVertexNormals();
 
@@ -890,6 +891,10 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 
 	}
 
+	CString str;
+	str.Format(_T("mouse position = ( %d , %d )\n"), point.x, point.y);
+	STATUS_BAR_TEXT(str);
+
 	CView::OnMouseMove(nFlags, point);
 }
 
@@ -918,7 +923,6 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 
 
 ////transformation matrices
-
 Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
 	// Calculate the center of the object
 	const BoundingBox& bbox = scene.getBoundingBox();
@@ -1058,36 +1062,50 @@ void CCGWorkView::ApplyZTranslation(int d) {
 }
 
 
+double validateFactor(double factor) {
+	const double threshold = 1e-2;
+	if (std::abs(factor) < threshold) {
+		// Return the threshold value with the same sign as the original factor
+		return (factor < 0) ? -threshold : threshold;
+	}
+	return factor; // Return the original factor if it's above the threshold
+}
+
 void CCGWorkView::ApplyXScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(factor, 1.0, 1.0);
+	const double  f = validateFactor(factor);
+	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(f, 1.0, 1.0);
 	ApplyTransformation(scalingMatrix);
 
 	// Update status bar
 	CString str;
-	str.Format(_T("Scaled along X by factor: %.2f"), factor);
+	str.Format(_T("Scaled along X by factor: %.3f"), f);
 	STATUS_BAR_TEXT(str);
 }
 
 void CCGWorkView::ApplyYScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(1.0, factor, 1.0);
+	const double f = validateFactor(factor);
+
+	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(1.0, f, 1.0);
 	ApplyTransformation(scalingMatrix);
 
 	// Update status bar
 	CString str;
-	str.Format(_T("Scaled along Y by factor: %.2f"), factor);
+	str.Format(_T("Scaled along Y by factor: %.3f"), f);
 	STATUS_BAR_TEXT(str);
 }
 
 void CCGWorkView::ApplyZScale(double factor) {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(1.0, 1.0, factor);
+	const double f = validateFactor(factor);
+
+	Matrix4 scalingMatrix = CreateCenteredScalingMatrix(1.0, 1.0, f); // Use factor, not 1.0 / factor
 	ApplyTransformation(scalingMatrix);
 
 	// Update status bar
 	CString str;
-	str.Format(_T("Scaled along Z by factor: %.2f"), factor);
+	str.Format(_T("Scaled along Z by factor: %.3f"), f);
 	STATUS_BAR_TEXT(str);
 }
 

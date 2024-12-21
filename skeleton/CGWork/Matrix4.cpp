@@ -224,7 +224,6 @@ Matrix4 Matrix4::inverse() const {
     }
 
     return result;
-
 }
 double Matrix4::DegsToRad(double angle)
 {

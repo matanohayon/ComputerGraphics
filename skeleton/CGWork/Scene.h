@@ -19,6 +19,7 @@ private:
     std::vector<Poly*>* polygons;   // List of polygons in the scene
     Matrix4 sceneTransform;       // Transformation matrix for the entire scene
     BoundingBox boundingBox;      // Scene bounding box
+    BoundingBox localBoundingBox;      // Scene bounding box
 
     COLORREF wireframeColor;      // Custom wireframe color
     COLORREF normalColor;         // Custom normal color
@@ -65,6 +66,7 @@ public:
 
     // Get the bounding box of the scene
     const BoundingBox& getBoundingBox() const;
+    const BoundingBox& getLocalBoundingBox() const;
 
     // Set custom colors for wireframe, normals, and background
     void setColors(COLORREF wireframe, COLORREF normal, COLORREF background);
