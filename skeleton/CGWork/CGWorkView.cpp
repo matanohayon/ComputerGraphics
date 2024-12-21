@@ -1067,7 +1067,7 @@ double validateFactor(double factor) {
 	}
 	else if (factor >= 0) {
 		return 1.2;
-	}lid 
+	} 
 	else {
 		return 0.81;
 	}
