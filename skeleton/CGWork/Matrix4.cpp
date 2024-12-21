@@ -12,6 +12,8 @@ Matrix4::Matrix4() {
             m[i][j] = (i == j) ? 1.0 : 0.0;
 }
 
+
+
 //construction from vectors
 Matrix4::Matrix4(Vector4& a, Vector4& b, Vector4& c, Vector4& d)
 {

@@ -12,6 +12,8 @@ Vertex::Vertex(float x, float y, float z, float w)
 Vertex::Vertex(float x, float y, float z)
     : Vector4(x, y, z, 1.0f), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false), normalProvidedFromFile(false) {}
 
+
+
 // Constructor with normal and flag
 Vertex::Vertex(const Vector4& position, const Vector4& normalStart, const Vector4& normalEnd, bool normalProvidedFromFile)
     : Vector4(position), normalStart(normalStart), normalEnd(normalEnd), hasNormal(true), normalProvidedFromFile(normalProvidedFromFile) {}
