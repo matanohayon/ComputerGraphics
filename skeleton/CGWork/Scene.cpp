@@ -74,6 +74,9 @@ void Scene::applyTransform(const Matrix4& transform) {
 
     // Apply the transformation to the bounding box
     boundingBox.applyTransform(transform);
+
+    updateObjectCenter();
+
 }
 
 // Calculate the bounding box of the scene
@@ -123,6 +126,23 @@ void Scene::calculateBoundingBoxFromVertices() {
 // Get the bounding box of the scene
 const BoundingBox& Scene::getBoundingBox() const {
     return boundingBox;
+}
+
+Vector4 Scene::getObjectCenter() {
+    return objectCenter;
+}
+
+void Scene::updateObjectCenter() {
+    const BoundingBox& bbox = getBoundingBox();
+    std::vector<Vector4> corners = bbox.getCorners();
+
+    // Calculate the center of the bounding box
+    objectCenter = Vector4(
+        (corners[0].x + corners[7].x) / 2.0,
+        (corners[0].y + corners[7].y) / 2.0,
+        (corners[0].z + corners[7].z) / 2.0,
+        1.0 // Homogeneous coordinate
+    );
 }
 
 // Set custom colors for wireframe, normals, and background

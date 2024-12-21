@@ -58,8 +58,14 @@ private:
 
     std::unordered_map<std::size_t, std::vector<Poly*>> vertexConnectivity; //hashing the vertices
 
+    Vector4 objectCenter; //center of the object , will keep it to rotate and scale around it!
 
 public:
+
+    void updateObjectCenter();
+
+    Vector4 getObjectCenter();
+
     Scene();
 
 

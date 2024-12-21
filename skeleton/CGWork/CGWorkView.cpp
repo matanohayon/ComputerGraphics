@@ -926,17 +926,7 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 
 ////transformation matrices
 Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
-	// Get the corners of the bounding box
-	const BoundingBox& bbox = scene.getBoundingBox();
-	std::vector<Vector4> corners = bbox.getCorners();
-
-	// Calculate the center of the bounding box using the relevant corners
-	Vector4 center = Vector4(
-		(corners[0].x + corners[6].x) / 2.0, // Average of TLF.x and BRB.x
-		(corners[0].y + corners[6].y) / 2.0, // Average of TLF.y and BRB.y
-		(corners[0].z + corners[6].z) / 2.0, // Average of TLF.z and BRB.z
-		1.0 // Homogeneous coordinate
-	);
+	Vector4 center = scene.getObjectCenter();
 
 	// Create translation matrices
 	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
@@ -949,18 +939,7 @@ Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
 
 
 Matrix4 CreateCenteredScalingMatrix(double scaleX, double scaleY, double scaleZ) {
-	// Get the corners of the bounding box
-	const BoundingBox& bbox = scene.getBoundingBox();
-	std::vector<Vector4> corners = bbox.getCorners();
-
-	// Calculate the center of the bounding box using the relevant corners
-	Vector4 center = Vector4(
-		(corners[0].x + corners[6].x) / 2.0, // Average of TLF.x and BRB.x
-		(corners[0].y + corners[6].y) / 2.0, // Average of TLF.y and BRB.y
-		(corners[0].z + corners[6].z) / 2.0, // Average of TLF.z and BRB.z
-		1.0 // Homogeneous coordinate
-	);
-
+	Vector4 center = scene.getObjectCenter();
 	// Create translation matrices
 	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
 
