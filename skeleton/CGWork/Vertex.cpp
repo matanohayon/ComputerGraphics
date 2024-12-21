@@ -1,11 +1,33 @@
 #include "Vertex.h"
 
 // Default constructor
-Vertex::Vertex() : Vector4(), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false) {}
+Vertex::Vertex()
+    : Vector4(), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false), normalProvidedFromFile(false) {}
 
-// Constructor with position
-Vertex::Vertex(double x, double y, double z, double w)
-    : Vector4(x, y, z, w), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false) {}
+// Constructor with position (4 arguments)
+Vertex::Vertex(float x, float y, float z, float w)
+    : Vector4(x, y, z, w), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false), normalProvidedFromFile(false) {}
+
+// Constructor with position (3 arguments, defaults w to 1.0f)
+Vertex::Vertex(float x, float y, float z)
+    : Vector4(x, y, z, 1.0f), normalStart(Vector4()), normalEnd(Vector4()), hasNormal(false), normalProvidedFromFile(false) {}
+
+// Constructor with normal and flag
+Vertex::Vertex(const Vector4& position, const Vector4& normalStart, const Vector4& normalEnd, bool normalProvidedFromFile)
+    : Vector4(position), normalStart(normalStart), normalEnd(normalEnd), hasNormal(true), normalProvidedFromFile(normalProvidedFromFile) {}
+
+
+// Getter for normalProvidedFromFile
+bool Vertex::isNormalProvidedFromFile() const {
+    return normalProvidedFromFile;
+}
+
+// Setter for normalProvidedFromFile
+void Vertex::setNormalProvidedFromFile(bool provided) {
+    normalProvidedFromFile = provided;
+    hasNormal = true;
+}
+
 
 Vertex& Vertex::operator=(const Vector4& v) {
     // Assign Vector4 components (position)
@@ -44,10 +66,11 @@ void Vertex::setNormalEnd(const Vector4& end) {
 }
 
 // Setter for normal start and end
-void Vertex::setNormal(const Vector4& start, const Vector4& end) {
+void Vertex::setNormal(const Vector4& start, const Vector4& end, const bool fromFile) {
     normalStart = start;
     normalEnd = end;
     hasNormal = true;
+    normalProvidedFromFile = fromFile;
 
 }
 

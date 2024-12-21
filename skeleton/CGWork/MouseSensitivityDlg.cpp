@@ -5,24 +5,20 @@
 #include "CGWork.h"
 #include "MouseSensitivityDlg.h"
 #include "afxdialogex.h"
-#include "Scene.h"
-extern Scene scene;
 
 
 // MouseSensitivityDlg dialog
 
 IMPLEMENT_DYNAMIC(MouseSensitivityDlg, CDialog)
 
-
+int rotate = 15, translate = 2, scale = 2;
 
 MouseSensitivityDlg::MouseSensitivityDlg(CWnd* pParent /*=nullptr*/)
 	: CDialog(IDD_MOUSE, pParent)
+	, TranslationSensitivity(translate)
+	, r_slider_value(rotate)
+	, S_slider_value(scale)
 {
-	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	TranslationSensitivity = pApp->t_slider_value;
-	r_slider_value = pApp->r_slider_value;
-	S_slider_value = pApp->s_slider_value;
-
 
 }
 
@@ -33,10 +29,10 @@ MouseSensitivityDlg::~MouseSensitivityDlg()
 void MouseSensitivityDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Slider(pDX, IDC_SLIDER1, TranslationSensitivity);
-	DDX_Control(pDX, IDC_SLIDER1, T_slider);
-	DDX_Control(pDX, IDC_SLIDER2, R_slider);
-	DDX_Slider(pDX, IDC_SLIDER2, r_slider_value);
+	DDX_Slider(pDX, IDC_SLIDER2, TranslationSensitivity);
+	DDX_Control(pDX, IDC_SLIDER2, T_slider);
+	DDX_Control(pDX, IDC_SLIDER1, R_slider);
+	DDX_Slider(pDX, IDC_SLIDER1, r_slider_value);
 	DDX_Control(pDX, IDC_SLIDER3, S_slider);
 	DDX_Slider(pDX, IDC_SLIDER3, S_slider_value);
 }
@@ -47,11 +43,11 @@ BOOL MouseSensitivityDlg::OnInitDialog() {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 
-	T_slider.SetRange(0, 10);
+	T_slider.SetRange(0, 30);
 	T_slider.SetPos(pApp->t_slider_value);
-	R_slider.SetRange(0, 10);
+	R_slider.SetRange(0, 30);
 	R_slider.SetPos(pApp->r_slider_value);
-	S_slider.SetRange(0, 10);
+	S_slider.SetRange(0, 30);
 	S_slider.SetPos(pApp->s_slider_value);
 
 	return TRUE;
@@ -78,10 +74,6 @@ void MouseSensitivityDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 
 
 		pApp->t_slider_value = T_slider.GetPos();
-		TranslationSensitivity = T_slider.GetPos();
-		UpdateData(TRUE);
-		Invalidate();
-	
 
 	}
 	else if (pScrollBar->GetSafeHwnd() == R_slider.GetSafeHwnd())
@@ -101,14 +93,10 @@ void MouseSensitivityDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 
 void MouseSensitivityDlg::OnDefaultsButtonClicked() {
 	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
-	pApp->t_slider_value = 1;
-	TranslationSensitivity = 1;
+	pApp->t_slider_value = 5;
 	T_slider.SetPos(pApp->t_slider_value);
-	pApp->r_slider_value = 1;
+	pApp->r_slider_value = 5;
 	R_slider.SetPos(pApp->r_slider_value);
-	pApp->s_slider_value = 1;
+	pApp->s_slider_value = 5;
 	S_slider.SetPos(pApp->s_slider_value);
-
-
-
 }

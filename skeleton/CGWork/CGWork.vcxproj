@@ -78,7 +78,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\pngLib;..\;..\inc_irit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\pngLib;..\;..\inc_irit;..\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;WINVER=0x501;NO_WARN_MBCS_MFC_DEPRECATION;__WINNT__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -209,6 +209,7 @@
     <ClCompile Include="PerspectiveDlg.cpp" />
     <ClCompile Include="PngWrapper.cpp" />
     <ClCompile Include="Poly.cpp" />
+    <ClCompile Include="PolygonFineness.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="StdAfx.cpp">
@@ -244,6 +245,7 @@
     <ClInclude Include="PerspectiveDlg.h" />
     <ClInclude Include="PngWrapper.h" />
     <ClInclude Include="Poly.h" />
+    <ClInclude Include="PolygonFineness.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="StdAfx.h" />

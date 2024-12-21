@@ -25,7 +25,10 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	ON_WM_CREATE()
 	ON_COMMAND(ID_OPTIONS_OBJECTCOLOR, &CMainFrame::OnObjectColor)
+
 	ON_COMMAND(ID_OPTIONS_BACKGROUNDCOLOR, &CMainFrame::OnBackgroundColor)
+	ON_COMMAND(ID_OPTIONS_VERTEXNORMALSCOLOR, &CMainFrame::OnVertexNormalsColor)
+	ON_COMMAND(ID_OPTIONS_POLYGONNORMALSCOLOR, &CMainFrame::OnPolygonNormalsColor)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -43,7 +46,7 @@ static UINT indicators[] =
 CMainFrame::CMainFrame()
 {
 	// TODO: add member initialization code here
-	
+
 }
 
 CMainFrame::~CMainFrame()
@@ -54,7 +57,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	
+
 	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
 		| CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
 		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
@@ -65,7 +68,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if (!m_wndStatusBar.Create(this) ||
 		!m_wndStatusBar.SetIndicators(indicators,
-		  sizeof(indicators)/sizeof(UINT)))
+			sizeof(indicators) / sizeof(UINT)))
 	{
 		TRACE0("Failed to create status bar\n");
 		return -1;      // fail to create
@@ -82,7 +85,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-	if( !CFrameWnd::PreCreateWindow(cs) )
+	if (!CFrameWnd::PreCreateWindow(cs))
 		return FALSE;
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
@@ -134,7 +137,7 @@ void CMainFrame::OnObjectColor()
 
 		// Use the selected color (e.g., store it, apply it, etc.)
 		pApp->Object_color = selectedColor;
-		
+
 	}
 }
 
@@ -153,6 +156,44 @@ void CMainFrame::OnBackgroundColor()
 		// Use the selected color (e.g., store it, apply it, etc.)
 
 		pApp->Background_color = selectedColor;
+
+	}
+}
+
+void CMainFrame::OnVertexNormalsColor()
+{
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	COLORREF initialColor = pApp->vertex_normals_color;
+	CColorDialog colorDlg(initialColor);
+
+	// Display the dialog and handle the user's choice
+	if (colorDlg.DoModal() == IDOK)
+	{
+		// Get the selected color
+		COLORREF selectedColor = colorDlg.GetColor();
+
+		// Use the selected color (e.g., store it, apply it, etc.)
+
+		pApp->vertex_normals_color = selectedColor;
+
+	}
+}
+
+void CMainFrame::OnPolygonNormalsColor()
+{
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	COLORREF initialColor = pApp->poly_normals_color;
+	CColorDialog colorDlg(initialColor);
+
+	// Display the dialog and handle the user's choice
+	if (colorDlg.DoModal() == IDOK)
+	{
+		// Get the selected color
+		COLORREF selectedColor = colorDlg.GetColor();
+
+		// Use the selected color (e.g., store it, apply it, etc.)
+
+		pApp->poly_normals_color = selectedColor;
 
 	}
 }

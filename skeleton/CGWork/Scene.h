@@ -1,6 +1,7 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include <unordered_map> //for hashing the vertices
 #include <vector>
 #include "Poly.h"
 #include "Vertex.h"
@@ -15,15 +16,16 @@ struct BoundingBox {
 
 class Scene {
 private:
-    std::vector<Poly*> *polygons;   // List of polygons in the scene
+    std::vector<Poly*>* polygons;   // List of polygons in the scene
     Matrix4 sceneTransform;       // Transformation matrix for the entire scene
     BoundingBox boundingBox;      // Scene bounding box
+    BoundingBox localBoundingBox;      // Scene bounding box
 
     COLORREF wireframeColor;      // Custom wireframe color
     COLORREF normalColor;         // Custom normal color
     COLORREF backgroundColor;     // Custom background color
 
-    double sensitivity;           // Sensitivity factor for transformations
+    float sensitivity;           // Sensitivity factor for transformations
 
     bool showNormals;             // Flag to show normals
     bool showBoundingBox;         // Flag to show bounding box
@@ -32,9 +34,12 @@ private:
 
     bool isFirstDraw;             // Indicates if it is the first drawing
 
+    std::unordered_map<std::size_t, std::vector<Poly*>> vertexConnectivity; //hashing the vertices
+
+
 public:
     Scene();
-    
+
 
     bool hasBoundingBox;
 
@@ -61,6 +66,7 @@ public:
 
     // Get the bounding box of the scene
     const BoundingBox& getBoundingBox() const;
+    const BoundingBox& getLocalBoundingBox() const;
 
     // Set custom colors for wireframe, normals, and background
     void setColors(COLORREF wireframe, COLORREF normal, COLORREF background);
@@ -71,10 +77,10 @@ public:
     COLORREF getBackgroundColor() const;
 
     // Set sensitivity for transformations
-    void setSensitivity(double newSensitivity);
+    void setSensitivity(float newSensitivity);
 
     // Get sensitivity value
-    double getSensitivity() const;
+    float getSensitivity() const;
 
     void setShowNormals(bool show);
     bool isShowNormals() const;
@@ -91,6 +97,18 @@ public:
 
     // Clear the scene (reset the polygons, transformations, and bounding box)
     void clear();
+
+
+    // Add a polygon to the connectivity map
+    void addPolygonToConnectivity(const Vertex& vertex, Poly* polygon);
+
+    // Get incident polygons for a vertex
+    const std::vector<Poly*>& getIncidentPolygons(const Vertex& vertex) const;
+
+    // Hash function for vertex coordinates
+    static std::size_t hashVertex(const Vertex& vertex, double accuracy = 1e-5);
+    void calculateVertexNormals();
+
 };
 
 #endif // SCENE_H
