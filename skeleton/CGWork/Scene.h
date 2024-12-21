@@ -10,8 +10,31 @@
 #include <Windows.h>
 
 struct BoundingBox {
-    Vector4 min; // Minimum coordinates
-    Vector4 max; // Maximum coordinates
+    Vector4 TLF; // Top-Left-Forward corner of the bounding box
+    Vector4 TLB; // Top-Left-Backward corner of the bounding box
+    Vector4 TRF; // Top-Right-Forward corner of the bounding box
+    Vector4 TRB; // Top-Right-Backward corner of the bounding box
+    Vector4 BLF; // Bottom-Left-Forward corner of the bounding box
+    Vector4 BLB; // Bottom-Left-Backward corner of the bounding box
+    Vector4 BRF; // Bottom-Right-Forward corner of the bounding box
+    Vector4 BRB; // Bottom-Right-Backward corner of the bounding box
+
+    // Get all corners of the bounding box
+    std::vector<Vector4> getCorners() const {
+        return { TLF, TLB, TRF, TRB, BLF, BLB, BRF, BRB };
+    }
+
+    // Apply a transformation matrix to all corners without aligning the bounding box
+    void applyTransform(const Matrix4& transform) {
+        TLF = transform.transform(TLF);
+        TLB = transform.transform(TLB);
+        TRF = transform.transform(TRF);
+        TRB = transform.transform(TRB);
+        BLF = transform.transform(BLF);
+        BLB = transform.transform(BLB);
+        BRF = transform.transform(BRF);
+        BRB = transform.transform(BRB);
+    }
 };
 
 class Scene {
@@ -19,7 +42,6 @@ private:
     std::vector<Poly*>* polygons;   // List of polygons in the scene
     Matrix4 sceneTransform;       // Transformation matrix for the entire scene
     BoundingBox boundingBox;      // Scene bounding box
-    BoundingBox localBoundingBox;      // Scene bounding box
 
     COLORREF wireframeColor;      // Custom wireframe color
     COLORREF normalColor;         // Custom normal color
@@ -56,7 +78,6 @@ public:
     void applyTransform(const Matrix4& transform);
 
     // Apply transformation to the bounding box
-    void applyTransformToBoundingBox(const Matrix4& transform);
 
     // Calculate the bounding box of the scene
     void calculateBoundingBox();
@@ -66,7 +87,6 @@ public:
 
     // Get the bounding box of the scene
     const BoundingBox& getBoundingBox() const;
-    const BoundingBox& getLocalBoundingBox() const;
 
     // Set custom colors for wireframe, normals, and background
     void setColors(COLORREF wireframe, COLORREF normal, COLORREF background);

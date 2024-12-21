@@ -366,22 +366,13 @@ void CCGWorkView::DrawPolygonNormal(CDC* pDC, Poly* poly, double screenHeight, C
 
 
 void CCGWorkView::DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double screenHeight, COLORREF color) {
-	// Extract min and max points
-	const Vector4& min = bbox.min;
-	const Vector4& max = bbox.max;
-
-	// Define the 8 corners of the bounding box
-	std::vector<Vector4> corners = {
-		{min.x, min.y, min.z, 1.0}, {max.x, min.y, min.z, 1.0},
-		{max.x, max.y, min.z, 1.0}, {min.x, max.y, min.z, 1.0},
-		{min.x, min.y, max.z, 1.0}, {max.x, min.y, max.z, 1.0},
-		{max.x, max.y, max.z, 1.0}, {min.x, max.y, max.z, 1.0}
-	};
+	// Get the 8 corners of the bounding box
+	std::vector<Vector4> corners = bbox.getCorners();
 
 	// Define the 12 edges of the bounding box
 	std::vector<std::pair<int, int>> edges = {
-		{0, 1}, {1, 2}, {2, 3}, {3, 0}, // Bottom face
-		{4, 5}, {5, 6}, {6, 7}, {7, 4}, // Top face
+		{0, 1}, {1, 3}, {3, 2}, {2, 0}, // Top face
+		{4, 5}, {5, 7}, {7, 6}, {6, 4}, // Bottom face
 		{0, 4}, {1, 5}, {2, 6}, {3, 7}  // Vertical edges
 	};
 
@@ -390,6 +381,7 @@ void CCGWorkView::DrawBoundingBox(CDC* pDC, const BoundingBox& bbox, double scre
 		DrawLineHelper(pDC, corners[edge.first], corners[edge.second], screenHeight, color);
 	}
 }
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CCGWorkView drawing
@@ -472,24 +464,35 @@ Matrix4 CCGWorkView::getMatrixToCenterObject() {
 	scene.calculateBoundingBox();
 
 	const BoundingBox& bbox = scene.getBoundingBox();
-	const Vector4& min = bbox.min;
-	const Vector4& max = bbox.max;
+	std::vector<Vector4> corners = bbox.getCorners(); // Get all corners of the bounding box
 
+	// Calculate min and max using appropriate corners
+	const Vector4& min = corners[5]; // BLB: Bottom-Left-Backward corner
+	const Vector4& max = corners[2]; // TRF: Top-Right-Forward corner
+
+	// Compute the center of the bounding box
 	const Vector4 center = Vector4(
 		(min.x + max.x) / 2.0,
 		(min.y + max.y) / 2.0,
 		(min.z + max.z) / 2.0,
 		1.0 // Maintain consistent w for homogeneous coordinates
 	);
+
+	// Get the client rectangle
 	CRect r;
 	GetClientRect(&r);
 
+	// Screen dimensions
 	const double screenWidth = static_cast<double>(r.Width());
 	const double screenHeight = static_cast<double>(r.Height());
-	const double marginFactor = 0.47; // initial load will onlu go from . meaning the center of the window
 
+	// Margin factor for initial load (centered on the window)
+	const double marginFactor = 0.47;
+
+	// Scene dimensions
 	const double sceneWidth = max.x - min.x;
 	const double sceneHeight = max.y - min.y;
+
 
 	const double targetWidth = screenWidth * (1.0 - marginFactor);
 	const double targetHeight = screenHeight * (1.0 - marginFactor);
@@ -890,9 +893,9 @@ void CCGWorkView::OnMouseMove(UINT nFlags, CPoint point)
 
 	}
 
-	//CString str;
-	//str.Format(_T("mouse position = ( %d , %d )\n"), point.x, point.y);
-	//STATUS_BAR_TEXT(str);
+	CString str;
+	str.Format(_T("mouse position = ( %d , %d )\n"), point.x, point.y);
+	STATUS_BAR_TEXT(str);
 
 	CView::OnMouseMove(nFlags, point);
 }
@@ -923,12 +926,15 @@ void CCGWorkView::OnLButtonUp(UINT nFlags, CPoint point)
 
 ////transformation matrices
 Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
-	// Calculate the center of the object
+	// Get the corners of the bounding box
 	const BoundingBox& bbox = scene.getBoundingBox();
+	std::vector<Vector4> corners = bbox.getCorners();
+
+	// Calculate the center of the bounding box using the relevant corners
 	Vector4 center = Vector4(
-		(bbox.min.x + bbox.max.x) / 2.0,
-		(bbox.min.y + bbox.max.y) / 2.0,
-		(bbox.min.z + bbox.max.z) / 2.0,
+		(corners[0].x + corners[6].x) / 2.0, // Average of TLF.x and BRB.x
+		(corners[0].y + corners[6].y) / 2.0, // Average of TLF.y and BRB.y
+		(corners[0].z + corners[6].z) / 2.0, // Average of TLF.z and BRB.z
 		1.0 // Homogeneous coordinate
 	);
 
@@ -940,19 +946,22 @@ Matrix4 CreateCenteredRotationMatrix(const Matrix4& rotationMatrix) {
 	return translateBack * rotationMatrix * translateToOrigin;
 }
 
+
+
 Matrix4 CreateCenteredScalingMatrix(double scaleX, double scaleY, double scaleZ) {
-	// Calculate the center of the object using the bounding box
+	// Get the corners of the bounding box
 	const BoundingBox& bbox = scene.getBoundingBox();
-	const Vector4& min = bbox.min;
-	const Vector4& max = bbox.max;
-	Vector4 center(
-		(min.x + max.x) / 2.0,
-		(min.y + max.y) / 2.0,
-		(min.z + max.z) / 2.0,
-		1.0
+	std::vector<Vector4> corners = bbox.getCorners();
+
+	// Calculate the center of the bounding box using the relevant corners
+	Vector4 center = Vector4(
+		(corners[0].x + corners[6].x) / 2.0, // Average of TLF.x and BRB.x
+		(corners[0].y + corners[6].y) / 2.0, // Average of TLF.y and BRB.y
+		(corners[0].z + corners[6].z) / 2.0, // Average of TLF.z and BRB.z
+		1.0 // Homogeneous coordinate
 	);
 
-	// Translation to the origin
+	// Create translation matrices
 	Matrix4 translateToOrigin = Matrix4::translate(-center.x, -center.y, -center.z);
 
 	// Scaling matrix
@@ -961,7 +970,7 @@ Matrix4 CreateCenteredScalingMatrix(double scaleX, double scaleY, double scaleZ)
 	// Translation back to the center
 	Matrix4 translateBack = Matrix4::translate(center.x, center.y, center.z);
 
-	// Combine transformations
+	// Combine transformations: Translate to origin -> Scale -> Translate back
 	return translateBack * scaling * translateToOrigin;
 }
 

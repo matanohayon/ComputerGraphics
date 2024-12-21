@@ -73,14 +73,8 @@ void Scene::applyTransform(const Matrix4& transform) {
     }
 
     // Apply the transformation to the bounding box
-    applyTransformToBoundingBox(transform);
+    boundingBox.applyTransform(transform);
 }
-
-
-void Scene::applyTransformToBoundingBox(const Matrix4& transform) {
-    boundingBox.min = transform.transform(boundingBox.min);
-    boundingBox.max = transform.transform(boundingBox.max);
-    }
 
 // Calculate the bounding box of the scene
 void Scene::calculateBoundingBox() {
@@ -91,19 +85,39 @@ void Scene::calculateBoundingBox() {
 // Calculate the bounding box from all vertices
 void Scene::calculateBoundingBoxFromVertices() {
     if (polygons->empty()) {
-        boundingBox.min = Vector4(0, 0, 0, 1);
-        boundingBox.max = Vector4(0, 0, 0, 1);
+        // Set all corners to (0, 0, 0) if there are no polygons
+        boundingBox.TLF = Vector4(0, 0, 0, 1);
+        boundingBox.TLB = Vector4(0, 0, 0, 1);
+        boundingBox.TRF = Vector4(0, 0, 0, 1);
+        boundingBox.TRB = Vector4(0, 0, 0, 1);
+        boundingBox.BLF = Vector4(0, 0, 0, 1);
+        boundingBox.BLB = Vector4(0, 0, 0, 1);
+        boundingBox.BRF = Vector4(0, 0, 0, 1);
+        boundingBox.BRB = Vector4(0, 0, 0, 1);
         return;
     }
+
+    // Initialize min and max to extreme values
     Vector4 newMin(DBL_MAX, DBL_MAX, DBL_MAX, 1);
     Vector4 newMax(-DBL_MAX, -DBL_MAX, -DBL_MAX, 1);
 
+    // Find the min and max values from all vertices
     for (Poly* poly : *polygons) {
         for (const Vertex& vertex : poly->getVertices()) {
-            boundingBox.min.updateMin(vertex);
-            boundingBox.max.updateMax(vertex);
+            newMin.updateMin(vertex); // Update the minimum corner
+            newMax.updateMax(vertex); // Update the maximum corner
         }
     }
+
+    // Set the bounding box corners based on min and max
+    boundingBox.TLF = Vector4(newMin.x, newMax.y, newMax.z, 1.0); // Top-Left-Forward
+    boundingBox.TLB = Vector4(newMin.x, newMax.y, newMin.z, 1.0); // Top-Left-Backward
+    boundingBox.TRF = Vector4(newMax.x, newMax.y, newMax.z, 1.0); // Top-Right-Forward
+    boundingBox.TRB = Vector4(newMax.x, newMax.y, newMin.z, 1.0); // Top-Right-Backward
+    boundingBox.BLF = Vector4(newMin.x, newMin.y, newMax.z, 1.0); // Bottom-Left-Forward
+    boundingBox.BLB = Vector4(newMin.x, newMin.y, newMin.z, 1.0); // Bottom-Left-Backward
+    boundingBox.BRF = Vector4(newMax.x, newMin.y, newMax.z, 1.0); // Bottom-Right-Forward
+    boundingBox.BRB = Vector4(newMax.x, newMin.y, newMin.z, 1.0); // Bottom-Right-Backward
 }
 
 // Get the bounding box of the scene
