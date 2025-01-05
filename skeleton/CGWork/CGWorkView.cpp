@@ -145,6 +145,7 @@ BEGIN_MESSAGE_MAP(CCGWorkView, CView)
 	ON_COMMAND(ID_BACKGROUNDIMAGE_ON, &CCGWorkView::OnBackGroundImageOn)
 	ON_UPDATE_COMMAND_UI(ID_BACKGROUNDIMAGE_ON, &CCGWorkView::OnUpdateBackGroundImageOn)
 
+	ON_COMMAND(ID_LIGHT_MATERIAL, OnMaterialDlg)
 	
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
@@ -522,6 +523,9 @@ void renderToBitmap(Point* bgBuffer, Point* edgesBuffer, Point* normalsBuffer, P
 
 	COLORREF* pixels = static_cast<COLORREF*>(pBits);
 
+	CCGWorkView* pApp = (CCGWorkView*)AfxGetApp();
+	CCGWorkApp* cApp = (CCGWorkApp*)AfxGetApp();
+
 	for (int y = 0; y < height; ++y) {
 		for (int x = 0; x < width; ++x) {
 			size_t index = y * width + x;
@@ -536,7 +540,49 @@ void renderToBitmap(Point* bgBuffer, Point* edgesBuffer, Point* normalsBuffer, P
 				color = edgesBuffer[index].getColor();
 			}
 			if (polygonsBuffer && polygonsBuffer[index].z < FLT_MAX) { // Polygons take priority
+
 				color = polygonsBuffer[index].getColor();
+
+				//COLORREF I_a = RGB(cApp->m_ambientLight.colorR * cApp->m_lMaterialAmbient * GetRValue(color), cApp->m_ambientLight.colorG * cApp->m_lMaterialAmbient * GetGValue(color), cApp->m_ambientLight.colorB * cApp->m_lMaterialAmbient * GetBValue(color));
+				//int tmp_r= GetRValue(color);
+				//int r = cApp->m_ambientLight.colorR * cApp->m_lMaterialAmbient * GetRValue(color);
+				//int g = cApp->m_ambientLight.colorG * cApp->m_lMaterialAmbient * GetGValue(color);
+				//int b = cApp->m_ambientLight.colorB * cApp->m_lMaterialAmbient * GetBValue(color);
+				
+		
+				int r = cApp->m_ambientLight.colorR * GetRValue(color);
+				int g = cApp->m_ambientLight.colorG * GetGValue(color);
+				int b = cApp->m_ambientLight.colorB * GetBValue(color);
+				r = r / 255.0f;
+				g = g / 255.0f;
+				b = b / 255.0f;
+
+				//if (r >= 255) r = 255;
+				//if (g >= 255) g = 255;
+				//if (b >= 255) b = 255;
+				r = r * cApp->m_lMaterialAmbient;
+				g = g * cApp->m_lMaterialAmbient;
+				b = b * cApp->m_lMaterialAmbient;
+
+/*
+				for (int i = LIGHT_ID_1; i < MAX_LIGHT; i++)
+				{
+					if (cApp->m_lights[i].enabled)
+					{
+						Vector4 dir(cApp->m_lights[i].dirX, cApp->m_lights[i].dirY, cApp->m_lights[i].dirZ);
+						Vector4 pos(cApp->m_lights[i].posX, cApp->m_lights[i].posY, cApp->m_lights[i].posZ);
+						Vector4 light = dir - pos;
+						const Poly* p = polygonsBuffer[index].getPolygon();
+						Normal n = p->getNormal();
+						Vector4 normal = n.getVector().normalize();
+						r = r + cApp->m_lights[i].colorR * cApp->m_lMaterialDiffuse * normal.dot(light.normalize());
+						g = g + cApp->m_lights[i].colorG * cApp->m_lMaterialDiffuse * normal.dot(light.normalize());
+						b = b + cApp->m_lights[i].colorB * cApp->m_lMaterialDiffuse * normal.dot(light.normalize());
+					}
+				}
+
+				*/
+				color = RGB(r, g, b);
 			}
 			if (normalsBuffer && normalsBuffer[index].getColor() != RGB(0, 0, 0)) {
 				color = normalsBuffer[index].getColor();
@@ -1004,25 +1050,34 @@ void CCGWorkView::OnUpdateLightShadingGouraud(CCmdUI* pCmdUI)
 
 // LIGHT SETUP HANDLER ///////////////////////////////////////////
 
-void CCGWorkView::OnLightConstants()
+void lightsDlgThread()
 {
+
 	CLightDialog dlg;
+	CCGWorkView* cApp = (CCGWorkView*)AfxGetApp();
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
 
 	for (int id = LIGHT_ID_1; id < MAX_LIGHT; id++)
 	{
-		dlg.SetDialogData((LightID)id, m_lights[id]);
+		dlg.SetDialogData((LightID)id, pApp->m_lights[id]);
 	}
-	dlg.SetDialogData(LIGHT_ID_AMBIENT, m_ambientLight);
+	dlg.SetDialogData(LIGHT_ID_AMBIENT, pApp->m_ambientLight);
 
 	if (dlg.DoModal() == IDOK)
 	{
 		for (int id = LIGHT_ID_1; id < MAX_LIGHT; id++)
 		{
-			m_lights[id] = dlg.GetDialogData((LightID)id);
+			pApp->m_lights[id] = dlg.GetDialogData((LightID)id);
 		}
-		m_ambientLight = dlg.GetDialogData(LIGHT_ID_AMBIENT);
+		pApp->m_ambientLight = dlg.GetDialogData(LIGHT_ID_AMBIENT);
 	}
-	Invalidate();
+	cApp->Invalidate();
+}
+
+void CCGWorkView::OnLightConstants()
+{
+	std::thread dialogThread(lightsDlgThread);
+	dialogThread.detach();
 }
 
 void CCGWorkView::OnTimer(UINT_PTR nIDEvent)
@@ -1614,4 +1669,31 @@ void CCGWorkView::OnOptionsPolygonFineness()
 	std::thread dialogThread(PolygonFinenessThread);
 	dialogThread.detach();
 }
+void MaterialDlgThread()
+{
+	CMaterialDlg dlg;
+	CCGWorkView* cApp = (CCGWorkView*)AfxGetApp();
+	CCGWorkApp* pApp = (CCGWorkApp*)AfxGetApp();
+	//dlg.m_ambient = pApp->m_lMaterialAmbient;
+	//dlg.m_diffuse = pApp->m_lMaterialDiffuse;
+	//dlg.m_specular = pApp->m_lMaterialSpecular;
+	//dlg.m_shininess = pApp->m_lMaterialShininess;
+
+	if (dlg.DoModal() == IDOK)
+	{
+		pApp->m_lMaterialAmbient = dlg.m_ambient;
+		pApp->m_lMaterialDiffuse = dlg.m_diffuse;
+		pApp->m_lMaterialSpecular = dlg.m_specular;
+		pApp->m_lMaterialShininess = dlg.m_shininess;
+	}
+	cApp->Invalidate();
+
+}
+
+void CCGWorkView::OnMaterialDlg()
+{
+	std::thread dialogThread(MaterialDlgThread);
+	dialogThread.detach();
+}
+
 

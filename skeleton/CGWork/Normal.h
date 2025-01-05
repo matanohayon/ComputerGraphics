@@ -20,6 +20,7 @@ public:
     bool isBackFacing(const Vector4& viewDirection) const;
     void transform(const Matrix4& transform, const Matrix4& normalTransform);
     void flip();
+    Vector4 getVector();
 private:
     // Helper function to apply a transformation matrix to a Vector4
     Vector4 applyTransformation(const Matrix4& matrix, const Vector4& vec) const;

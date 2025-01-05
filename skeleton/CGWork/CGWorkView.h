@@ -32,7 +32,7 @@ public:
 	// Operations
 public:
 
-private:
+public:
 	CSliderCtrl m_finenessSlider; // Slider control for tessellation fineness
 
 	bool m_draw_poly_normals; //flag to choose whether to draw poly normals
@@ -231,6 +231,7 @@ protected:
 	afx_msg void OnUpdateSolidRendering(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateBackGroundImageOn(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateBackGroundImageStretch(CCmdUI* pCmdUI);
+	afx_msg void OnMaterialDlg();
 
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

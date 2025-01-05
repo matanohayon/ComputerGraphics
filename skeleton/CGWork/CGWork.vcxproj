@@ -190,6 +190,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BrowseInformation>
     </ClCompile>
+    <ClCompile Include="Edge.cpp" />
     <ClCompile Include="iritSkel.cpp" />
     <ClCompile Include="LightDialog.cpp" />
     <ClCompile Include="LineDrawer.cpp" />
@@ -206,10 +207,13 @@
     <ClCompile Include="MaterialDlg.cpp" />
     <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="MouseSensitivityDlg.cpp" />
+    <ClCompile Include="Normal.cpp" />
     <ClCompile Include="PerspectiveDlg.cpp" />
     <ClCompile Include="PngWrapper.cpp" />
+    <ClCompile Include="Point.cpp" />
     <ClCompile Include="Poly.cpp" />
     <ClCompile Include="PolygonFineness.cpp" />
+    <ClCompile Include="ScanConvertZBuffer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="StdAfx.cpp">
@@ -234,6 +238,7 @@
     <ClInclude Include="CGWork.h" />
     <ClInclude Include="CGWorkDoc.h" />
     <ClInclude Include="CGWorkView.h" />
+    <ClInclude Include="Edge.h" />
     <ClInclude Include="iritSkel.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightDialog.h" />
@@ -242,11 +247,14 @@
     <ClInclude Include="MaterialDlg.h" />
     <ClInclude Include="Matrix4.h" />
     <ClInclude Include="MouseSensitivityDlg.h" />
+    <ClInclude Include="Normal.h" />
     <ClInclude Include="PerspectiveDlg.h" />
     <ClInclude Include="PngWrapper.h" />
+    <ClInclude Include="Point.h" />
     <ClInclude Include="Poly.h" />
     <ClInclude Include="PolygonFineness.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ScanConvertZBuffer.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="..\include\allocate.h" />

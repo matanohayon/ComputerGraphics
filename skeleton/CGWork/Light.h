@@ -60,6 +60,7 @@ public:
 	dirX(0),dirY(0),dirZ(0)
     {}
 
+    
 protected:
 private:
 };

@@ -51,3 +51,15 @@ void Normal::flip() {
     Vector4 direction = start - end; // Reverse the direction vector
     end = start + direction;         // Update the end point
 }
+
+Vector4 Normal::getVector()
+{
+    Vector4 normalVector = Vector4(
+        end.x - start.x,
+        end.y - start.y,
+        end.z - start.z,
+        0.0f // Normals are direction vectors, so w=0
+    );
+    return normalVector;
+
+}

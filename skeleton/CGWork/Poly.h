@@ -24,6 +24,7 @@ public:
 
     const Normal& getPolyNormalFromFile() const;
     const Normal& getPolyNormalCalculated() const;
+    const Normal& getNormal() const;
 
     void setPolyNormalFromFile(const Normal& normal);
     void setPolyNormalCalculated(const Normal& normal);

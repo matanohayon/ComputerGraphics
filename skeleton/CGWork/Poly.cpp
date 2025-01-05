@@ -104,3 +104,9 @@ void Poly::applyTransform(const Matrix4& transform, const Matrix4& normalTransfo
         polyNormalCalculated.transform(transform, normalTransform);
     }
 }
+
+const Normal& Poly::getNormal() const {
+    if (hasPolyNormalFromFile)
+        return polyNormalFromFile;
+    return polyNormalCalculated;
+}

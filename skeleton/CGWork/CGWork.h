@@ -13,7 +13,7 @@
 #endif
 
 #include "resource.h"       // main symbols
-
+#include "Light.h"
 /////////////////////////////////////////////////////////////////////////////
 // CCGWORKApp:
 // See CGWORK.cpp for the implementation of this class
@@ -40,6 +40,14 @@ public:
 	float aspectRatio;
 	CPoint start;
 	CPoint end;
+
+double m_lMaterialAmbient;		// The Ambient in the scene
+	double m_lMaterialDiffuse;		// The Diffuse in the scene
+	double m_lMaterialSpecular;		// The Specular in the scene
+	double m_lMaterialShininess;
+
+	LightParams m_lights[MAX_LIGHT];	//configurable lights array
+	LightParams m_ambientLight;		//ambient light (only RGB is used)
 
 
 // Overrides

@@ -98,6 +98,16 @@ BOOL CCGWorkApp::InitInstance()
 	aspectRatio=16.0/9.0;
 	nearPlane = 0.1;
 	farPlane=1000.0;
+	
+	m_lMaterialAmbient = 0.2;
+	m_lMaterialDiffuse = 0.8;
+	m_lMaterialSpecular = 1.0;
+	m_lMaterialShininess = 1.0;
+
+	m_lights[LIGHT_ID_1].enabled = true;
+
+
+
 
 	return TRUE;
 }
